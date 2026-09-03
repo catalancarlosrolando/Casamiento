@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Cormorant Garamond", serif;
+  --font-sans: "Montserrat", sans-serif;
+  --font-script: "Pinyon Script", cursive;
+
+  --color-primary: #0B272D;
+  --color-primary-deep: #051518;
+  --color-secondary: #5A9696;
+  --color-secondary-deep: #477878;
+  --color-accent-foliage: #BBDB93;
+  --color-accent-sprout: #D6E4BA;
+  --color-canvas: #E0E8E5;
+  --color-surface-card: #FFFFFF;
+  --color-surface-herb: #D6E4BA;
+  --color-surface-dark: #0B272D;
+  --color-ink: #0B272D;
+  --color-body: #1D373C;
+  --color-mute: #426B6B;
+}
+
+@layer base {
+  :root {
+    --colors-primary: #0B272D;
+    --colors-primary-deep: #051518;
+    --colors-secondary: #5A9696;
+    --colors-secondary-deep: #477878;
+    --colors-accent-foliage: #BBDB93;
+    --colors-accent-sprout: #D6E4BA;
+    --colors-canvas: #E0E8E5;
+    --colors-surface-card: #FFFFFF;
+    --colors-surface-herb: #D6E4BA;
+    --colors-surface-dark: #0B272D;
+    --colors-ink: #0B272D;
+    --colors-body: #1D373C;
+    --colors-mute: #426B6B;
+  }
+
+  body {
+    background-color: #E0E8E5;
+    color: #1D373C;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  h1, h2, h3, .font-serif-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  .font-script {
+    font-family: 'Pinyon Script', cursive;
+  }
+}
+
+/* Custom Botanical Animation & Styles */
+@keyframes pulseSubtle {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 3s ease-in-out infinite;
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: floatGentle 4s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #E0E8E5;
+}
+::-webkit-scrollbar-thumb {
+  background: #5A9696;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0B272D;
+}
