@@ -2,6 +2,7 @@ import React from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { SaveTheDateSection } from './components/SaveTheDateSection';
+import { ItinerarySection } from './components/ItinerarySection';
 import { DressCodeSection } from './components/DressCodeSection';
 import { VenueSection } from './components/VenueSection';
 import { RsvpSection } from './components/RsvpSection';
@@ -14,6 +15,7 @@ export const App: React.FC = () => {
       <main className="flex-grow">
         <HeroSection />
         <SaveTheDateSection />
+        <ItinerarySection />
         <DressCodeSection />
         <VenueSection />
         <RsvpSection />
