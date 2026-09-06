@@ -18,23 +18,23 @@ export const Footer: React.FC = () => {
             Shweta & Abhinav
           </span>
           <p className="text-xs tracking-[0.3em] uppercase text-[#BBDB93] font-semibold">
-            07 · NOVEMBER · 2026 · GHAZIABAD
+            07 · NOVIEMBRE · 2026 · GHAZIABAD
           </p>
         </div>
 
         {/* Romantic Quote */}
         <p className="font-serif-display text-xl sm:text-2xl text-[#E0E8E5]/90 italic max-w-lg mx-auto leading-relaxed">
-          “Together with their families, we invite you to celebrate this joyous union and make memories that will last a lifetime.”
+          “Junto a nuestras familias, los invitamos a celebrar esta unión y crear recuerdos que perdurarán para toda la vida.”
         </p>
 
         {/* Quick Nav */}
         <div className="flex flex-wrap justify-center gap-6 text-xs uppercase tracking-wider font-semibold text-[#E0E8E5]/70 pt-4">
-          <a href="#hero" className="hover:text-[#BBDB93] transition-colors">Home</a>
-          <a href="#save-the-date" className="hover:text-[#BBDB93] transition-colors">Save The Date</a>
+          <a href="#hero" className="hover:text-[#BBDB93] transition-colors">Inicio</a>
+          <a href="#save-the-date" className="hover:text-[#BBDB93] transition-colors">Reserva la Fecha</a>
           <a href="#itinerary" className="hover:text-[#BBDB93] transition-colors">Itinerario</a>
-          <a href="#dress-code" className="hover:text-[#BBDB93] transition-colors">Dress Code</a>
-          <a href="#venue" className="hover:text-[#BBDB93] transition-colors">Venue</a>
-          <a href="#rsvp" className="hover:text-[#BBDB93] transition-colors">Confirm RSVP</a>
+          <a href="#dress-code" className="hover:text-[#BBDB93] transition-colors">Código de Vestimenta</a>
+          <a href="#venue" className="hover:text-[#BBDB93] transition-colors">Ubicación</a>
+          <a href="#rsvp" className="hover:text-[#BBDB93] transition-colors">Confirmar Asistencia</a>
         </div>
 
         {/* Back to top button */}
@@ -42,7 +42,7 @@ export const Footer: React.FC = () => {
           <button
             onClick={scrollToTop}
             className="w-10 h-10 rounded-full bg-[#FFFFFF]/10 hover:bg-[#BBDB93] hover:text-[#0B272D] text-white flex items-center justify-center mx-auto transition-all shadow-md text-sm"
-            aria-label="Back to top"
+            aria-label="Volver arriba"
           >
             ↑
           </button>
@@ -50,7 +50,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Credits */}
         <div className="pt-8 border-t border-[#FFFFFF]/10 text-[10px] text-[#E0E8E5]/50 tracking-wider">
-          BOTANICAL SPRING EDITION • WEDDING CELEBRATION & RSVP DESIGN SYSTEM
+          EDICIÓN BOTÁNICA DE PRIMAVERA • CASAMIENTO & SISTEMA DE CONFIRMACIÓN RSVP
         </div>
 
       </div>

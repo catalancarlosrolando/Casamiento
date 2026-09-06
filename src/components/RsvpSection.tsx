@@ -17,16 +17,12 @@ export const RsvpSection: React.FC = () => {
   const [dietary, setDietary] = useState<string>('ninguno');
   const [dietaryNotes, setDietaryNotes] = useState<string>('');
   const [songRequest, setSongRequest] = useState<string>('');
-  
+
   // File Upload State
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Copy Feedback States
-  const [copiedCbu, setCopiedCbu] = useState(false);
-  const [copiedAlias, setCopiedAlias] = useState(false);
 
   // Submit & Validation States
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +30,7 @@ export const RsvpSection: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Price per person
-  const pricePerPerson = 35000;
+  const pricePerPerson = 75000;
   const totalAmount = guestCount * pricePerPerson;
 
   // File size formatter
@@ -104,17 +100,6 @@ export const RsvpSection: React.FC = () => {
     }
   };
 
-  const copyToClipboard = (text: string, type: 'cbu' | 'alias') => {
-    navigator.clipboard.writeText(text);
-    if (type === 'cbu') {
-      setCopiedCbu(true);
-      setTimeout(() => setCopiedCbu(false), 2000);
-    } else {
-      setCopiedAlias(true);
-      setTimeout(() => setCopiedAlias(false), 2000);
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -155,9 +140,13 @@ export const RsvpSection: React.FC = () => {
   };
 
   return (
-    <section id="rsvp" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#E0E8E5] relative">
-      <div className="max-w-4xl mx-auto">
-        
+    <section id="rsvp" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#EDF4E7] border-t border-[#0B272D]/6 relative overflow-hidden">
+      {/* Decorative Botanical Ambient Background Elements */}
+      <div className="absolute top-12 left-[-80px] w-96 h-96 bg-[#BBDB93]/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-12 right-[-80px] w-96 h-96 bg-[#5A9696]/15 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-4xl mx-auto relative z-10">
+
         {/* Section Header */}
         <div className="text-center mb-12">
           <span className="text-[#5A9696] font-semibold text-xs tracking-[0.25em] uppercase block mb-3">
@@ -167,13 +156,13 @@ export const RsvpSection: React.FC = () => {
             Confirma tu Asistencia
           </h2>
           <p className="text-[#1D373C] text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Nos encantaría contar con tu presencia. Por favor completa el formulario antes del <strong>1 de Octubre de 2026</strong>.
+            Nos encantaría contar con tu presencia. Por favor completa el formulario antes del <strong>5 de Octubre de 2026</strong>.
           </p>
         </div>
 
         {/* Centerpiece Elevated Stationery Card (max-width: 640px) */}
         <div className="max-w-[640px] mx-auto bg-white rounded-3xl shadow-2xl border border-[#0B272D]/15 overflow-hidden transition-all duration-300">
-          
+
           {/* Card Top Decorative Accent Bar */}
           <div className="h-2 bg-gradient-to-r from-[#5A9696] via-[#BBDB93] to-[#5A9696]" />
 
@@ -197,9 +186,8 @@ export const RsvpSection: React.FC = () => {
                   </h3>
                   <p className="text-xs sm:text-sm text-[#1D373C] max-w-md mx-auto leading-relaxed">
                     {attendance === 'attending'
-                      ? `Hemos registrado tu asistencia para ${guestCount} persona${guestCount > 1 ? 's' : ''}${
-                          attachedFile ? ' y adjuntado tu comprobante de reserva' : ''
-                        }. ¡Estamos muy felices de compartir este día con ustedes!`
+                      ? `Hemos registrado tu asistencia para ${guestCount} persona${guestCount > 1 ? 's' : ''}${attachedFile ? ' y adjuntado tu comprobante de reserva' : ''
+                      }. ¡Estamos muy felices de compartir este día con ustedes!`
                       : 'Lamentamos que no puedas acompañarnos físicamente, pero sabemos que estarás presente con el corazón.'}
                   </p>
                 </div>
@@ -249,7 +237,7 @@ export const RsvpSection: React.FC = () => {
 
               /* MAIN RSVP FORM */
               <form onSubmit={handleSubmit} className="space-y-6">
-                
+
                 {/* Header Tag inside card */}
                 <div className="flex items-center justify-between pb-4 border-b border-[#0B272D]/10">
                   <div>
@@ -325,11 +313,10 @@ export const RsvpSection: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setAttendance('attending')}
-                      className={`h-12 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all ${
-                        attendance === 'attending'
-                          ? 'bg-[#BBDB93] border-[#0B272D] text-[#0B272D] shadow-md ring-2 ring-[#0B272D]/20'
-                          : 'bg-white border-[#0B272D]/15 text-[#426B6B] hover:bg-[#E0E8E5]/50'
-                      }`}
+                      className={`h-12 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all ${attendance === 'attending'
+                        ? 'bg-[#BBDB93] border-[#0B272D] text-[#0B272D] shadow-md ring-2 ring-[#0B272D]/20'
+                        : 'bg-white border-[#0B272D]/15 text-[#426B6B] hover:bg-[#E0E8E5]/50'
+                        }`}
                     >
                       <span>🌿</span>
                       <span>Sí, asistiré con gusto</span>
@@ -338,11 +325,10 @@ export const RsvpSection: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setAttendance('declined')}
-                      className={`h-12 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all ${
-                        attendance === 'declined'
-                          ? 'bg-[#E0E8E5] border-[#0B272D] text-[#0B272D] shadow-md ring-2 ring-[#0B272D]/20'
-                          : 'bg-white border-[#0B272D]/15 text-[#426B6B] hover:bg-[#E0E8E5]/50'
-                      }`}
+                      className={`h-12 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all ${attendance === 'declined'
+                        ? 'bg-[#E0E8E5] border-[#0B272D] text-[#0B272D] shadow-md ring-2 ring-[#0B272D]/20'
+                        : 'bg-white border-[#0B272D]/15 text-[#426B6B] hover:bg-[#E0E8E5]/50'
+                        }`}
                     >
                       <span>✕</span>
                       <span>No podré asistir</span>
@@ -353,7 +339,7 @@ export const RsvpSection: React.FC = () => {
                 {/* ATTENDING ONLY FIELDS */}
                 {attendance === 'attending' && (
                   <div className="space-y-6 pt-2 animate-fade-in">
-                    
+
                     {/* FIELD 4: Guest Count Numeric Stepper */}
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
@@ -397,57 +383,18 @@ export const RsvpSection: React.FC = () => {
 
                     {/* FIELD 5: CONDITIONAL PAYMENT VOUCHER SECTION */}
                     <div className="bg-[#F5F9F8] rounded-2xl p-5 sm:p-6 border border-[#5A9696]/30 space-y-5">
-                      
+
                       {/* Bank Tag */}
                       <div className="flex items-center justify-between">
                         <span className="bg-[#D6E4BA] text-[#0B272D] text-[9px] font-bold tracking-wider uppercase px-3 py-1 rounded-full">
-                          🌿 DATOS PARA LA TRANSFERENCIA / APORTE
+                          🌿 DATOS PARA LA TRANSFERENCIA
                         </span>
                         <span className="text-xs font-bold text-[#0B272D]">
                           ${totalAmount.toLocaleString('es-AR')} ARS
                         </span>
                       </div>
 
-                      {/* Bank Details Box */}
-                      <div className="bg-white rounded-xl p-4 border border-[#0B272D]/10 space-y-2.5 text-xs">
-                        <div className="flex items-center justify-between pb-2 border-b border-[#0B272D]/5">
-                          <span className="text-[#5A9696] font-semibold">Banco:</span>
-                          <span className="font-bold text-[#0B272D]">Banco Santander Río</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between pb-2 border-b border-[#0B272D]/5">
-                          <span className="text-[#5A9696] font-semibold">Titular:</span>
-                          <span className="font-bold text-[#0B272D]">Valentina Rossi & Mateo Benítez</span>
-                        </div>
 
-                        <div className="flex items-center justify-between pb-2 border-b border-[#0B272D]/5">
-                          <div>
-                            <span className="text-[#5A9696] font-semibold block">CBU:</span>
-                            <span className="font-mono font-bold text-[#0B272D]">0720123488000034567891</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard('0720123488000034567891', 'cbu')}
-                            className="text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 bg-[#E0E8E5] hover:bg-[#BBDB93] text-[#0B272D] rounded-full transition-colors"
-                          >
-                            {copiedCbu ? '✓ Copiado' : 'Copiar CBU'}
-                          </button>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="text-[#5A9696] font-semibold block">Alias:</span>
-                            <span className="font-bold text-[#0B272D]">BODA.VALEN.MATEO</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard('BODA.VALEN.MATEO', 'alias')}
-                            className="text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 bg-[#E0E8E5] hover:bg-[#BBDB93] text-[#0B272D] rounded-full transition-colors"
-                          >
-                            {copiedAlias ? '✓ Copiado' : 'Copiar Alias'}
-                          </button>
-                        </div>
-                      </div>
 
                       {/* File Upload Dropzone */}
                       <div>
@@ -475,11 +422,10 @@ export const RsvpSection: React.FC = () => {
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
                             onDrop={handleDrop}
-                            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${
-                              isDragging
-                                ? 'border-[#0B272D] bg-[#D6E4BA]/30 scale-[1.02]'
-                                : 'border-[#5A9696] hover:border-[#0B272D] hover:bg-[#F9FBFA]'
-                            }`}
+                            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${isDragging
+                              ? 'border-[#0B272D] bg-[#D6E4BA]/30 scale-[1.02]'
+                              : 'border-[#5A9696] hover:border-[#0B272D] hover:bg-[#F9FBFA]'
+                              }`}
                           >
                             <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>
                             <p className="text-xs sm:text-sm font-bold text-[#0B272D] mb-1">
@@ -488,7 +434,7 @@ export const RsvpSection: React.FC = () => {
                             <p className="text-[11px] text-[#5A9696]">
                               Formatos permitidos: JPG, PNG, WEBP, PDF · Máximo 5 MB
                             </p>
-                            
+
                             <button
                               type="button"
                               className="mt-3 inline-block text-[11px] font-semibold text-[#5A9696] bg-white border border-[#5A9696] px-4 py-1.5 rounded-full hover:bg-[#5A9696] hover:text-white transition-colors"
@@ -613,7 +559,7 @@ export const RsvpSection: React.FC = () => {
                       </>
                     )}
                   </button>
-                  
+
                   <p className="text-center text-[11px] text-[#426B6B] mt-3">
                     🔒 Tus datos están cifrados y solo serán visibles para los anfitriones.
                   </p>

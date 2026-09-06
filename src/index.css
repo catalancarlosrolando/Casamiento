@@ -3,7 +3,7 @@
 @theme {
   --font-display: "Cormorant Garamond", serif;
   --font-sans: "Montserrat", sans-serif;
-  --font-script: "Pinyon Script", cursive;
+  --font-script: "Petit Formal Script", cursive;
 
   --color-primary: #0B272D;
   --color-primary-deep: #051518;
@@ -43,19 +43,31 @@
     font-family: 'Montserrat', sans-serif;
   }
 
-  h1, h2, h3, .font-serif-display {
+  h1,
+  h2,
+  h3,
+  .font-serif-display {
     font-family: 'Cormorant Garamond', Georgia, serif;
   }
 
   .font-script {
-    font-family: 'Pinyon Script', cursive;
+    font-family: 'Petit Formal Script', cursive;
   }
 }
 
 /* Custom Botanical Animation & Styles */
 @keyframes pulseSubtle {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.85; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.85;
+  }
 }
 
 .animate-pulse-subtle {
@@ -63,8 +75,15 @@
 }
 
 @keyframes floatGentle {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 .animate-float {
@@ -76,13 +95,16 @@
   width: 8px;
   height: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: #E0E8E5;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #5A9696;
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #0B272D;
 }

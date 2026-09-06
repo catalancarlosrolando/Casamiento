@@ -43,8 +43,8 @@ export const SaveTheDateSection: React.FC = () => {
   ];
 
   const handleAddToCalendar = () => {
-    const title = encodeURIComponent("Shweta & Abhinav's Wedding");
-    const details = encodeURIComponent("Save the date! Formal invitation to follow. Join us for the wedding celebration of Shweta and Abhinav in Ghaziabad, India.");
+    const title = encodeURIComponent("Casamiento de Shweta & Abhinav");
+    const details = encodeURIComponent("¡Reserva la fecha! Te invitamos a celebrar el casamiento de Shweta y Abhinav en Ghaziabad.");
     const location = encodeURIComponent("Ghaziabad, India");
     const dates = "20261107T153000Z/20261108T040000Z";
     const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
@@ -54,57 +54,55 @@ export const SaveTheDateSection: React.FC = () => {
   return (
     <section id="save-the-date" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#E0E8E5] relative">
       <div className="max-w-[1080px] mx-auto">
-        
+
         {/* Section Header (1:1 from casamiento.pen Frame 3) */}
         <div className="text-center mb-12 sm:mb-14">
           <span className="text-[#5A9696] font-semibold text-xs tracking-[0.25em] uppercase block mb-3 font-sans">
-            SAVE THE DATE
+            RESERVA LA FECHA
           </span>
           <h2 className="font-serif-display text-4xl sm:text-5xl font-semibold text-[#0B272D] mb-4">
-            Mark Your Calendar For Our Special Day
+            Agenda Nuestro Gran Día
           </h2>
-          <p className="text-[#1D373C] text-sm sm:text-base max-w-2xl mx-auto font-sans">
-            Join us in Ghaziabad on Saturday, November 7th, 2026
-          </p>
+
         </div>
 
         {/* Save the Date Stationery Card (Clean 2-Column Desktop Layout 1:1 Frame 3) */}
         <div className="bg-white rounded-[20px] shadow-xl border border-[#0B272D]/15 p-6 sm:p-10 max-w-[1040px] mx-auto">
           <div className="flex flex-col md:flex-row items-stretch gap-8 lg:gap-10">
-            
+
             {/* ============================================================ */}
-            {/* Left Column: Typography Lockup (07 save / 11 our / 26 date) */}
+            {/* Left Column: Typography Lockup (07 reserva / 11 nuestra / 26 fecha) */}
             {/* ============================================================ */}
             <div className="w-full md:w-[45%] lg:w-[420px] flex-shrink-0 bg-[#FAFBF9] rounded-2xl p-6 sm:p-8 border border-[#0B272D]/10 flex flex-col items-center justify-between min-h-[480px] md:min-h-[580px] text-center shadow-inner">
               <div className="w-full my-auto space-y-4 py-4">
-                
-                {/* Row 1: 07 save */}
+
+                {/* Row 1: 07 reserva */}
                 <div className="flex items-center justify-center gap-4">
                   <span className="font-serif-display text-7xl sm:text-8xl font-semibold text-[#0B272D] leading-none tracking-tight">
                     07
                   </span>
                   <span className="font-script text-5xl sm:text-6xl text-[#5A9696] leading-none pt-2">
-                    save
+                    reserva
                   </span>
                 </div>
 
-                {/* Row 2: 11 our */}
+                {/* Row 2: 11 nuestra */}
                 <div className="flex items-center justify-center gap-4">
                   <span className="font-serif-display text-7xl sm:text-8xl font-semibold text-[#0B272D] leading-none tracking-tight">
                     11
                   </span>
                   <span className="font-script text-5xl sm:text-6xl text-[#5A9696] leading-none pt-2">
-                    our
+                    nuestra
                   </span>
                 </div>
 
-                {/* Row 3: 26 date */}
+                {/* Row 3: 26 fecha */}
                 <div className="flex items-center justify-center gap-4">
                   <span className="font-serif-display text-7xl sm:text-8xl font-semibold text-[#0B272D] leading-none tracking-tight">
                     26
                   </span>
                   <span className="font-script text-5xl sm:text-6xl text-[#5A9696] leading-none pt-2">
-                    date
+                    fecha
                   </span>
                 </div>
 
@@ -112,7 +110,7 @@ export const SaveTheDateSection: React.FC = () => {
 
               {/* Footnote Left */}
               <div className="w-full pt-6 border-t border-[#0B272D]/10 text-[#5A9696] text-[11px] font-semibold tracking-[0.2em] uppercase font-sans">
-                🌿 — NOVEMBER 2026 — 🌿
+                🌿 — NOVIEMBRE 2026 — 🌿
               </div>
             </div>
 
@@ -123,34 +121,34 @@ export const SaveTheDateSection: React.FC = () => {
             {/* Right Column: Calendar & Announcement */}
             {/* ============================================================ */}
             <div className="w-full md:flex-1 flex flex-col justify-between space-y-4 sm:space-y-5">
-              
+
               {/* Couple Header */}
               <div className="text-center pt-2">
                 <h3 className="font-script text-4xl sm:text-5xl text-[#0B272D] mb-1">
-                  Shweta & Abhinav
+                  Mariana & Carlos
                 </h3>
                 <span className="text-[11px] text-[#5A9696] font-semibold tracking-[0.3em] uppercase block font-sans">
-                  ARE GETTING MARRIED!
+                  ¡NOS CASAMOS!
                 </span>
                 <div className="w-full h-[1px] bg-[#0B272D]/10 mt-3" />
               </div>
 
               {/* Month Header */}
-              <div className="text-center font-sans font-bold text-sm sm:text-base text-[#0B272D] tracking-wider">
-                NOVEMBER 2026
+              <div className="hidden md:block text-center font-sans font-bold text-sm sm:text-base text-[#0B272D] tracking-wider">
+                NOVIEMBRE 2026
               </div>
 
               {/* Calendar Grid Frame */}
-              <div className="bg-[#FAFBF9] rounded-xl p-3.5 sm:p-5 border border-[#0B272D]/10 shadow-inner">
+              <div className="hidden md:block bg-[#FAFBF9] rounded-xl p-3.5 sm:p-5 border border-[#0B272D]/10 shadow-inner">
                 {/* Day Headers */}
                 <div className="grid grid-cols-7 text-center text-xs font-semibold text-[#5A9696] mb-2 font-sans">
-                  <span>MON</span>
-                  <span>TUE</span>
-                  <span>WED</span>
-                  <span>THU</span>
-                  <span>FRI</span>
-                  <span className="text-[#0B272D] font-bold">SAT</span>
-                  <span>SUN</span>
+                  <span>LUN</span>
+                  <span>MAR</span>
+                  <span>MIÉ</span>
+                  <span>JUE</span>
+                  <span>VIE</span>
+                  <span className="text-[#0B272D] font-bold">SÁB</span>
+                  <span>DOM</span>
                 </div>
 
                 {/* Days Grid */}
@@ -158,13 +156,12 @@ export const SaveTheDateSection: React.FC = () => {
                   {calendarDays.map((item, index) => (
                     <div
                       key={index}
-                      className={`h-8 sm:h-9 flex items-center justify-center rounded-lg transition-all ${
-                        item.empty
-                          ? 'opacity-0'
-                          : item.isWedding
+                      className={`h-8 sm:h-9 flex items-center justify-center rounded-lg transition-all ${item.empty
+                        ? 'opacity-0'
+                        : item.isWedding
                           ? 'bg-[#BBDB93] text-[#0B272D] font-bold border border-[#0B272D] rounded-full shadow-md scale-105 animate-pulse-subtle'
                           : 'text-[#1D373C] hover:bg-[#E0E8E5]'
-                      }`}
+                        }`}
                     >
                       {item.isWedding ? (
                         <span className="flex items-center gap-0.5 font-bold">
@@ -181,10 +178,10 @@ export const SaveTheDateSection: React.FC = () => {
               {/* Location & Footnote Line */}
               <div className="text-center space-y-1 font-sans">
                 <p className="text-xs sm:text-sm font-bold text-[#0B272D] tracking-wider">
-                  📍 GHAZIABAD, INDIA
+                  📍 Ullum, San Juan
                 </p>
                 <p className="text-[11px] text-[#5A9696] font-medium tracking-widest uppercase">
-                  FORMAL INVITATION TO FOLLOW
+                  INVITACIÓN FORMAL A CONTINUACIÓN
                 </p>
               </div>
 
@@ -195,21 +192,10 @@ export const SaveTheDateSection: React.FC = () => {
                   className="w-full max-w-[360px] mx-auto bg-[#0B272D] hover:bg-[#051518] text-white border-[1.5px] border-[#BBDB93] text-xs font-semibold tracking-[0.1em] uppercase py-3.5 px-6 rounded-full shadow-lg transition-all flex items-center justify-center gap-2 font-sans"
                 >
                   <span>📅</span>
-                  <span>ADD TO GOOGLE CALENDAR</span>
+                  <span>AGREGAR A GOOGLE CALENDAR</span>
                 </button>
               </div>
 
-              {/* GCal Sync Metadata Note */}
-              <div className="bg-[#FAFBF9] rounded-xl p-3 sm:p-3.5 border border-[#0B272D]/10 text-left font-sans space-y-1">
-                <p className="text-[11px] font-bold text-[#0B272D] flex items-center gap-1.5">
-                  <span>✨</span>
-                  <span>Google Calendar Pre-populated Template</span>
-                </p>
-                <p className="text-[10px] text-[#426B6B] leading-relaxed">
-                  Event: Shweta & Abhinav's Wedding • Date: Nov 7, 2026, 21:00 IST<br />
-                  Location: Ghaziabad, India • Details: Save the date! Formal invitation to follow.
-                </p>
-              </div>
 
             </div>
 
