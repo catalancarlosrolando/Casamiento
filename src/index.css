@@ -75,6 +75,11 @@
   animation: pulseSubtle 3s ease-in-out infinite;
 }
 
+.LoweControl {
+  position: absolute;
+  bottom: -400px;
+}
+
 @keyframes floatGentle {
 
   0%,

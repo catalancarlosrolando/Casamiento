@@ -84,85 +84,89 @@ export const HeroSection: React.FC = () => {
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#5A9696]/20 rounded-full blur-3xl pointer-events-none" />
 
       {/* Hero Content Container */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 flex flex-col items-center my-auto">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 flex flex-col items-center">
 
-        {/* Countdown Timer Container (1:1 from casamiento.pen Frame 1) */}
-        <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0B272D]/80 border border-[#D6E4BA]/30 backdrop-blur-md text-[#D6E4BA] text-xs font-semibold tracking-widest uppercase mb-8 shadow-sm animate-fade-in font-sans">
+        {/* Countdown Timer Container (Translucent Glassmorphism) */}
+        <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-black/30 border border-[#D6E4BA]/40 backdrop-blur-md text-[#D6E4BA] text-xs font-semibold tracking-widest uppercase mb-8 shadow-lg animate-fade-in font-sans">
           <span>🌿</span>
-          <span>{timeLeft.days} DÍAS • {timeLeft.hours} HORAS • {timeLeft.minutes} MIN • {timeLeft.seconds} SEG</span>
+          <span className="drop-shadow-sm">{timeLeft.days} DÍAS • {timeLeft.hours} HORAS • {timeLeft.minutes} MIN • {timeLeft.seconds} SEG</span>
         </div>
 
         {/* Script Intro */}
-        <p className="font-script text-2xl sm:text-3xl lg:text-4xl text-[#D6E4BA] mb-3 font-normal max-w-2xl mx-auto leading-relaxed">
+        <p className="font-script text-2xl sm:text-3xl lg:text-4xl text-[#D6E4BA] mb-3 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
           Ven y celebra con nosotros el casamiento de
         </p>
 
         {/* Couple Title */}
-        <h1 className="font-serif-display text-5xl sm:text-7xl lg:text-8xl font-semibold text-white tracking-tight leading-[1.05] mb-6 drop-shadow-md">
+        <h1 className="font-serif-display text-5xl sm:text-7xl lg:text-8xl font-semibold text-white tracking-tight leading-[1.05] mb-6 drop-shadow-[0_4px_16px_rgba(0,0,0,0.7)]">
           Mariana <span className="font-script text-4xl sm:text-6xl text-[#BBDB93] font-normal">&</span> Carlos
         </h1>
 
         {/* Botanical Flourish */}
-        <div className="flex items-center gap-3 text-[#BBDB93]/70 mb-8 font-sans">
-          <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#BBDB93]/60" />
+        <div className="flex items-center gap-3 text-[#BBDB93]/90 mb-8 font-sans drop-shadow-md">
+          <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#BBDB93]/80" />
           <span className="text-sm">🌿 — ✦ — 🌿</span>
-          <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#BBDB93]/60" />
+          <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#BBDB93]/80" />
         </div>
 
-        {/* Event Quick-Info Pill (1:1 from casamiento.pen Frame 1) */}
-        <div className="bg-[#FFFFFF30] text-[#0B272D] rounded-2xl sm:rounded-full p-3 sm:p-2 sm:pl-8 sm:pr-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-8 shadow-xl border border-[#0B272D]/10 mb-10 w-full sm:w-auto font-sans">
-          <div className="text-center sm:text-left">
-            <p className="text-xs sm:text-sm font-bold text-[#0B272D] leading-tight">
-              Sábado, 7 de Noviembre de 2026
-            </p>
-            <p className="text-[10px] text-[#5A9696] tracking-wider uppercase font-semibold">
-              CEREMONIA & VOTOS
-            </p>
+
+        {/* Lower Controls Container - positioned further down to reveal background */}
+        <div className="LoweControl sm:mt-28 lg:mt-36 flex flex-col items-center w-full">
+
+          {/* Event Quick-Info Pill - Hidden on Mobile, Glassmorphic on Desktop */}
+          <div className="hidden sm:flex bg-black/30 backdrop-blur-md text-white rounded-full py-2.5 px-8 flex-row items-center gap-8 shadow-2xl border border-white/20 mb-8 font-sans transition-all">
+            <div className="text-left">
+              <p className="text-xs sm:text-sm font-bold text-white leading-tight drop-shadow-sm">
+                Sábado, 7 de Noviembre de 2026
+              </p>
+              <p className="text-[10px] text-[#D6E4BA] tracking-wider uppercase font-semibold">
+                CEREMONIA & VOTOS
+              </p>
+            </div>
+
+            <div className="w-[1px] h-8 bg-white/25" />
+
+            <div className="text-left">
+              <p className="text-xs sm:text-sm font-bold text-white leading-tight drop-shadow-sm">
+                21:00 HRS • Salón Complejo Nautico Ullum
+              </p>
+              <p className="text-[10px] text-[#D6E4BA] tracking-wider uppercase font-semibold">
+                RECEPCIÓN & FIESTA
+              </p>
+            </div>
           </div>
 
-          <div className="hidden sm:block w-[1px] h-8 bg-[#0B272D]/15" />
-
-          <div className="text-center sm:text-left">
-            <p className="text-xs sm:text-sm font-bold text-[#0B272D] leading-tight">
-              21:00 HRS • Salón Complejo Nautico Ullum
-            </p>
-            <p className="text-[10px] text-[#5A9696] tracking-wider uppercase font-semibold">
-              RECEPCIÓN & FIESTA
-            </p>
-          </div>
-        </div>
-
-        {/* Hero Action CTA Group */}
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center font-sans mb-8">
-          <a
-            href="#rsvp"
-            className="inline-flex items-center justify-center bg-[#BBDB93] hover:bg-[#d6e4ba] text-[#0B272D] font-bold text-xs sm:text-sm tracking-widest uppercase px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-          >
-            CONFIRMAR ASISTENCIA
-          </a>
-          <button
-            onClick={handleAddToCalendar}
-            className="inline-flex items-center justify-center bg-[#FFFFFF]/15 hover:bg-[#FFFFFF]/25 text-white border border-[#FFFFFF]/30 font-semibold text-xs sm:text-sm tracking-wider uppercase px-7 py-4 rounded-full backdrop-blur-md transition-all duration-300"
-          >
-            AGENDAR EN CALENDARIO
-          </button>
-        </div>
-
-        {/* Slideshow Indicator Dots */}
-        <div className="flex items-center justify-center gap-2.5">
-          {heroImages.map((_, i) => (
+          {/* Hero Action CTA Group */}
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center font-sans mb-8">
+            <a
+              href="#rsvp"
+              className="inline-flex items-center justify-center bg-[#BBDB93]/90 hover:bg-[#BBDB93] text-[#0B272D] font-bold text-xs sm:text-sm tracking-widest uppercase px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-xl backdrop-blur-sm"
+            >
+              CONFIRMAR ASISTENCIA
+            </a>
             <button
-              key={i}
-              onClick={() => setCurrentImageIndex(i)}
-              className={`rounded-full transition-all duration-700 ${i === currentImageIndex
-                ? 'w-8 h-2 bg-[#BBDB93] shadow-[0_0_8px_#BBDB93]'
-                : 'w-2 h-2 bg-white/40 hover:bg-white/70'
-                }`}
-              aria-label={`Foto ${i + 1}`}
-            />
-          ))}
-        </div>
+              onClick={handleAddToCalendar}
+              className="inline-flex items-center justify-center bg-black/30 hover:bg-black/50 text-white border border-white/40 font-semibold text-xs sm:text-sm tracking-wider uppercase px-7 py-4 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg"
+            >
+              AGENDAR EN CALENDARIO
+            </button>
+          </div>
 
+          {/* Slideshow Indicator Dots */}
+          <div className="flex items-center justify-center gap-2.5">
+            {heroImages.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentImageIndex(i)}
+                className={`rounded-full transition-all duration-700 ${i === currentImageIndex
+                  ? 'w-8 h-2 bg-[#BBDB93] shadow-[0_0_8px_#BBDB93]'
+                  : 'w-2 h-2 bg-white/40 hover:bg-white/70'
+                  }`}
+                aria-label={`Foto ${i + 1}`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Scroll Indicator - Know More (1:1 from casamiento.pen Frame 1) */}
