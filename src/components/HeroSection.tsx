@@ -11,6 +11,20 @@ export const HeroSection: React.FC = () => {
     seconds: 0,
   });
 
+  // Hero Background Slideshow with Spectacular Ken Burns Transition
+  const heroImages = [
+    '/images/heroImage1.webp',
+    '/images/heroImage2.webp',
+  ];
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const imageInterval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 6500);
+    return () => clearInterval(imageInterval);
+  }, [heroImages.length]);
+
   useEffect(() => {
     const calculateTimeLeft = () => {
       const difference = +targetDate - +new Date();
@@ -39,13 +53,35 @@ export const HeroSection: React.FC = () => {
   };
 
   return (
-    <section id="hero" className="relative min-h-screen flex flex-col justify-between items-center text-center overflow-hidden pt-28 pb-16 bg-[#0B272D]">
-      {/* Visual Atmospheric Layers (1:1 from casamiento.pen Frame 1) */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0B272D]/90 via-[#13383F]/70 to-[#0B272D] z-0" />
+    <section id="hero" className="relative min-h-screen flex flex-col justify-between items-center text-center overflow-hidden pt-28 pb-16 bg-[#0B272D00]">
+      {/* Spectacular Ken Burns Background Slideshow */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        {heroImages.map((src, index) => {
+          const isActive = index === currentImageIndex;
+          return (
+            <div
+              key={src}
+              className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${isActive ? 'opacity-100' : 'opacity-0'
+                }`}
+            >
+              <img
+                src={src}
+                alt="Mariana & Carlos"
+                className={`w-full h-full object-cover object-center transform transition-transform duration-[8000ms] ease-out ${isActive ? 'scale-110 translate-y-[-1%]' : 'scale-100'
+                  }`}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Cinematic Vignette & Botanical Darkness Gradients */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0B272D]/40 via-[#0B272D]/40 to-[#0B272D] z-0 pointer-events-none" />
+      <div className="absolute inset-0 bg-radial from-transparent via-[#0B272D]/40 to-[#0B272D]/90 z-0 pointer-events-none" />
 
       {/* Decorative Botanical Elements & Gradient Glow */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#BBDB93]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#5A9696]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#BBDB93]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#5A9696]/20 rounded-full blur-3xl pointer-events-none" />
 
       {/* Hero Content Container */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 flex flex-col items-center my-auto">
@@ -74,7 +110,7 @@ export const HeroSection: React.FC = () => {
         </div>
 
         {/* Event Quick-Info Pill (1:1 from casamiento.pen Frame 1) */}
-        <div className="bg-[#FFFFFF] text-[#0B272D] rounded-2xl sm:rounded-full p-3 sm:p-2 sm:pl-8 sm:pr-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-8 shadow-xl border border-[#0B272D]/10 mb-10 w-full sm:w-auto font-sans">
+        <div className="bg-[#FFFFFF30] text-[#0B272D] rounded-2xl sm:rounded-full p-3 sm:p-2 sm:pl-8 sm:pr-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-8 shadow-xl border border-[#0B272D]/10 mb-10 w-full sm:w-auto font-sans">
           <div className="text-center sm:text-left">
             <p className="text-xs sm:text-sm font-bold text-[#0B272D] leading-tight">
               Sábado, 7 de Noviembre de 2026
@@ -97,7 +133,7 @@ export const HeroSection: React.FC = () => {
         </div>
 
         {/* Hero Action CTA Group */}
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center font-sans">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center font-sans mb-8">
           <a
             href="#rsvp"
             className="inline-flex items-center justify-center bg-[#BBDB93] hover:bg-[#d6e4ba] text-[#0B272D] font-bold text-xs sm:text-sm tracking-widest uppercase px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
@@ -112,10 +148,25 @@ export const HeroSection: React.FC = () => {
           </button>
         </div>
 
+        {/* Slideshow Indicator Dots */}
+        <div className="flex items-center justify-center gap-2.5">
+          {heroImages.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentImageIndex(i)}
+              className={`rounded-full transition-all duration-700 ${i === currentImageIndex
+                ? 'w-8 h-2 bg-[#BBDB93] shadow-[0_0_8px_#BBDB93]'
+                : 'w-2 h-2 bg-white/40 hover:bg-white/70'
+                }`}
+              aria-label={`Foto ${i + 1}`}
+            />
+          ))}
+        </div>
+
       </div>
 
       {/* Scroll Indicator - Know More (1:1 from casamiento.pen Frame 1) */}
-      <div className="relative z-10 flex flex-col items-center gap-1 text-[#E0E8E5]/70 text-xs tracking-widest uppercase mt-6 font-sans">
+      <div className="relative z-10 flex flex-col items-center gap-1 text-[#E0E8E5]/70 text-xs tracking-widest uppercase mt-4 font-sans">
         <span className="text-[10px] font-semibold text-[#BBDB93]">CONOCE MÁS</span>
         <span className="text-sm text-[#BBDB93] animate-bounce">⌵</span>
         <span className="text-[9px] text-[#E0E8E5]/50 tracking-wider">Desliza para explorar la celebración</span>

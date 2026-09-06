@@ -3,7 +3,7 @@
 @theme {
   --font-display: "Cormorant Garamond", serif;
   --font-sans: "Montserrat", sans-serif;
-  --font-script: "Petit Formal Script", cursive;
+  --font-script: "Pinyon Script", cursive;
 
   --color-primary: #0B272D;
   --color-primary-deep: #051518;
@@ -35,6 +35,7 @@
     --colors-ink: #0B272D;
     --colors-body: #1D373C;
     --colors-mute: #426B6B;
+    --colors-hero: #ffffff68;
   }
 
   body {
@@ -51,7 +52,7 @@
   }
 
   .font-script {
-    font-family: 'Petit Formal Script', cursive;
+    font-family: 'Pinyon Script', cursive;
   }
 }
 
