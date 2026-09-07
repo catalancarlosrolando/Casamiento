@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_API_KEY,
@@ -14,12 +15,12 @@ const firebaseConfig = {
 // Inicializa Firebase
 const app = initializeApp(firebaseConfig);
 
-// Inicializa Firestore
-const db = getFirestore(app);
+// Inicializa Firestore (con el Database ID personalizado 'invitados')
+const firestoreDbId = "default";
+export const db = getFirestore(app, firestoreDbId);
 
-
-// Log para validar la conexión a la base de datos
-console.log("Conexión a Firestore establecida:", db);
+// Inicializa Storage
+export const storage = getStorage(app);
 
 export const auth = getAuth(app);
 

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../services/authService';
-import { useNavigate } from 'react-router-dom';
 import { isAuthorizedUser } from '../services/AuthorizedUser';
-
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const location = useLocation();
+  const home = location.pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,18 +20,14 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const navLinks = [
-    { name: 'Guarda La Fecha', href: '#save-the-date' },
-    { name: 'ITINERARIO', href: '#itinerary' },
-    { name: 'VESTIMENTA', href: '#dress-code' },
-    { name: 'UBICACIÓN', href: '#venue' },
-
-
+    { name: 'Guarda La Fecha', href: '/#save-the-date' },
+    { name: 'ITINERARIO', href: '/#itinerary' },
+    { name: 'VESTIMENTA', href: '/#dress-code' },
+    { name: 'UBICACIÓN', href: '/#venue' },
   ];
 
   const { user } = useAuth();
   const navigate = useNavigate();
-  //quiero que esta variable me determine si estoy en "/" o no 
-  const home = window.location.pathname === "/";
 
   const handleLogout = async () => {
     await logout();
@@ -143,7 +140,17 @@ export const Navbar: React.FC = () => {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#0B272D] border-b border-[#FFFFFF]/10 px-6 py-6 space-y-4 animate-in fade-in duration-200">
-          {navLinks.map((link) => (
+          {!home && (
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm tracking-wider uppercase font-semibold text-[#BBDB93]"
+            >
+              ← Volver al Inicio
+            </Link>
+          )}
+
+          {home && navLinks.map((link) => (
             <a
               key={link.name}
               href={link.href}
@@ -153,10 +160,19 @@ export const Navbar: React.FC = () => {
               {link.name}
             </a>
           ))}
-          <a
-            href="#rsvp"
+
+          <Link
+            to="/pago"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-center bg-[#BBDB93] text-[#0B272D] text-xs font-bold tracking-widest uppercase py-3 rounded-full"
+            className="block text-sm tracking-wider uppercase font-semibold text-[#E0E8E5] hover:text-[#BBDB93]"
+          >
+            📄 Subir Comprobante
+          </Link>
+
+          <a
+            href="/#rsvp"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-center bg-[#BBDB93] text-[#0B272D] text-xs font-bold tracking-widest uppercase py-3 rounded-full shadow-md"
           >
             CONFIRMAR ASISTENCIA
           </a>

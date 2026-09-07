@@ -6,6 +6,7 @@ import NotFound from "../pages/404.tsx";
 import ErrorPage from "../pages/ErrorPage.tsx";
 import ProtectedRoute from "../components/ProtectedRoute.tsx";
 import Home from "../pages/Home.tsx";
+import Pago from "../pages/Pago.tsx";
 
 
 export const router = createBrowserRouter([
@@ -25,6 +26,11 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />
       },
       {
+        path: "/pago",
+        element: <Pago />,
+        errorElement: <ErrorPage />
+      },
+      {
         path: "/dashboard",
         element: (
           <ProtectedRoute>
@@ -40,4 +46,4 @@ export const router = createBrowserRouter([
 
     ]
   }
-]);
+]);

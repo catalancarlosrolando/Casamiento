@@ -1,4 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  createInvitado, 
+  TelefonoDuplicadoError, 
+  isArgentinaPhoneValid, 
+  type Invitado 
+} from '../services/rsvpService';
 
 interface AttachedFile {
   file: File;
@@ -11,12 +18,15 @@ export const RsvpSection: React.FC = () => {
   // Form States
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [attendance, setAttendance] = useState<'attending' | 'declined' | ''>('attending');
   const [guestCount, setGuestCount] = useState<number>(1);
   const [dietary, setDietary] = useState<string>('ninguno');
   const [songRequest, setSongRequest] = useState<string>('');
   const [comment, setComment] = useState<string>('');
+
+  // Payment Option State: 'ahora' (Pay now & attach) vs 'tarde' (Pay later & receive unique link)
+  const [paymentOption, setPaymentOption] = useState<'ahora' | 'tarde'>('ahora');
 
   // File Upload State
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
@@ -27,11 +37,23 @@ export const RsvpSection: React.FC = () => {
   // Submit & Validation States
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [duplicateGuest, setDuplicateGuest] = useState<Invitado | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [savedInvitado, setSavedInvitado] = useState<Invitado | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedBankField, setCopiedBankField] = useState<string | null>(null);
 
   // Price per person
   const pricePerPerson = 75000;
   const totalAmount = guestCount * pricePerPerson;
+
+  // Bank Data
+  const bankData = {
+    cbu: '0000003100012345678901',
+    alias: 'BODA.VALEN.MATEO',
+    bank: 'Banco Santander',
+    owner: 'Valentina Rossi & Mateo Fernández',
+  };
 
   // File size formatter
   const formatFileSize = (bytes: number): string => {
@@ -51,7 +73,7 @@ export const RsvpSection: React.FC = () => {
       return;
     }
 
-    // Validate size (5MB max = 5 * 1024 * 1024 bytes)
+    // Validate size (5MB max)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       setFileError('El archivo supera el tamaño máximo permitido de 5 MB.');
@@ -100,13 +122,31 @@ export const RsvpSection: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Listen for Escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && duplicateGuest) {
+        setDuplicateGuest(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [duplicateGuest]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
+    setDuplicateGuest(null);
 
     // Basic validation
-    if (!firstName.trim() || !lastName.trim()) {
-      setFormError('Por favor ingresa tu Nombre y Apellido.');
+    if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
+      setFormError('Por favor ingresa tu Nombre, Apellido y Teléfono.');
+      return;
+    }
+
+    // Validate Argentine Phone
+    if (!isArgentinaPhoneValid(phone)) {
+      setFormError('Por favor ingresa un número de teléfono válido de Argentina con código de área (ej: 264 123 4567 o 11 1234 5678).');
       return;
     }
 
@@ -120,24 +160,84 @@ export const RsvpSection: React.FC = () => {
       return;
     }
 
-    // Submit Simulation
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const fileToUpload = (attendance === 'attending' && paymentOption === 'ahora') 
+        ? attachedFile?.file 
+        : null;
+
+      const result = await createInvitado(
+        {
+          nombre: firstName,
+          apellido: lastName,
+          telefono: phone,
+          asistencia: attendance,
+          invitados: guestCount,
+          restriccionAlimentaria: dietary,
+          mensaje: comment,
+          cancion: songRequest,
+          opcionPago: attendance === 'attending' ? paymentOption : 'no_aplica',
+          montoTotal: totalAmount,
+          estadoPago: attendance !== 'attending' 
+            ? 'no_aplica' 
+            : (fileToUpload ? 'en_revision' : 'pendiente'),
+        },
+        fileToUpload
+      );
+
+      setSavedInvitado(result);
       setIsSubmitted(true);
-    }, 1500);
+    } catch (err: any) {
+      if (err instanceof TelefonoDuplicadoError) {
+        setDuplicateGuest(err.invitadoExistente);
+      } else {
+        console.error('Error al guardar confirmación:', err);
+        setFormError(err?.message || 'Ocurrió un problema al enviar tu confirmación. Por favor intenta nuevamente.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleResetForm = () => {
     setIsSubmitted(false);
+    setSavedInvitado(null);
+    setDuplicateGuest(null);
     setFirstName('');
     setLastName('');
-    setEmail('');
+    setPhone('');
     setAttendance('attending');
-    setGuestCount(2);
+    setGuestCount(1);
+    setPaymentOption('ahora');
     setAttachedFile(null);
     setFormError(null);
+    setCopiedLink(false);
   };
+
+  const handleCopyLink = () => {
+    if (!savedInvitado) return;
+    const url = `${window.location.origin}/pago?id=${savedInvitado.id}`;
+    navigator.clipboard.writeText(url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!savedInvitado) return;
+    const url = `${window.location.origin}/pago?id=${savedInvitado.id}`;
+    const text = encodeURIComponent(
+      `¡Hola ${firstName}! Acá tienes el enlace exclusivo para subir el comprobante de pago de la boda de Mariana y Carlos (${guestCount} lugares reservados - Total: $${totalAmount.toLocaleString('es-AR')} ARS):\n${url}`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  };
+
+  const handleCopyBank = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedBankField(field);
+    setTimeout(() => setCopiedBankField(null), 2000);
+  };
+
+  const paymentLink = savedInvitado ? `${window.location.origin}/pago?id=${savedInvitado.id}` : '';
 
   return (
     <section id="rsvp" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#EDF4E7] border-t border-[#0B272D]/6 relative overflow-hidden">
@@ -148,7 +248,7 @@ export const RsvpSection: React.FC = () => {
       <div className="max-w-4xl mx-auto relative z-10">
 
         {/* Section Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <span className="text-[#5A9696] font-semibold text-xs tracking-[0.25em] uppercase block mb-3">
             CONFIRMACIÓN & ASISTENCIA
           </span>
@@ -158,6 +258,16 @@ export const RsvpSection: React.FC = () => {
           <p className="text-[#1D373C] text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
             Nos encantaría contar con tu presencia. Por favor completa el formulario antes del <strong>5 de Octubre de 2026</strong>.
           </p>
+
+          {/* Quick link for guests who already RSVP'd */}
+          <div className="mt-4">
+            <Link
+              to="/pago"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5A9696] hover:text-[#0B272D] underline tracking-wide transition-colors"
+            >
+              <span>📄 ¿Ya confirmaste tu asistencia y querés subir o consultar tu comprobante? Hacé clic acá →</span>
+            </Link>
+          </div>
         </div>
 
         {/* Centerpiece Elevated Stationery Card (max-width: 640px) */}
@@ -169,51 +279,111 @@ export const RsvpSection: React.FC = () => {
           <div className="p-6 sm:p-10">
 
             {/* SUCCESS CONFIRMATION VIEW */}
-            {isSubmitted ? (
-              <div className="text-center py-8 space-y-6 animate-fade-in">
+            {isSubmitted && savedInvitado ? (
+              <div className="text-center py-6 space-y-6 animate-fade-in">
                 <div className="w-20 h-20 mx-auto rounded-full bg-[#BBDB93] flex items-center justify-center text-4xl text-[#0B272D] font-bold shadow-lg animate-bounce">
                   ✓
                 </div>
 
                 <div>
                   <span className="bg-[#D6E4BA] text-[#0B272D] text-[10px] font-bold tracking-widest uppercase px-4 py-1.5 rounded-full">
-                    {attendance === 'attending' ? 'ASISTENCIA CONFIRMADA' : 'RESPUESTA REGISTRADA'}
+                    {attendance === 'attending' ? 'ASISTENCIA REGISTRADA' : 'RESPUESTA REGISTRADA'}
                   </span>
                   <h3 className="font-serif-display text-3xl sm:text-4xl font-bold text-[#0B272D] mt-4 mb-2">
                     {attendance === 'attending'
-                      ? `¡Gracias ${firstName}! Nos vemos pronto`
+                      ? `¡Gracias ${firstName}! Tu lugar está reservado`
                       : `Gracias por avisarnos, ${firstName}`}
                   </h3>
                   <p className="text-xs sm:text-sm text-[#1D373C] max-w-md mx-auto leading-relaxed">
                     {attendance === 'attending'
-                      ? `Hemos registrado tu asistencia para ${guestCount} persona${guestCount > 1 ? 's' : ''}${attachedFile ? ' y adjuntado tu comprobante de reserva' : ''
-                      }. ¡Estamos muy felices de compartir este día con ustedes!`
+                      ? (savedInvitado.comprobanteUrl
+                        ? `Hemos registrado tu asistencia para ${guestCount} persona${guestCount > 1 ? 's' : ''} y recibido tu comprobante. ¡Los novios lo revisarán a la brevedad!`
+                        : `Hemos registrado tu asistencia para ${guestCount} persona${guestCount > 1 ? 's' : ''}. Recuerda que puedes subir tu comprobante de transferencia en cualquier momento con tu enlace único o teléfono.`
+                      )
                       : 'Lamentamos que no puedas acompañarnos físicamente, pero sabemos que estarás presente con el corazón.'}
                   </p>
                 </div>
 
                 {attendance === 'attending' && (
-                  <div className="bg-[#F7FAF9] rounded-2xl p-4 sm:p-6 border border-[#0B272D]/10 text-left space-y-3 max-w-md mx-auto text-xs">
-                    <div className="flex justify-between pb-2 border-b border-[#0B272D]/10">
-                      <span className="text-[#5A9696] font-semibold">Titular:</span>
-                      <span className="font-bold text-[#0B272D]">{firstName} {lastName}</span>
+                  <div className="space-y-4">
+                    {/* Summary Info */}
+                    <div className="bg-[#F7FAF9] rounded-2xl p-4 sm:p-5 border border-[#0B272D]/10 text-left space-y-2.5 max-w-md mx-auto text-xs">
+                      <div className="flex justify-between pb-2 border-b border-[#0B272D]/10">
+                        <span className="text-[#5A9696] font-semibold">Titular:</span>
+                        <span className="font-bold text-[#0B272D]">{firstName} {lastName}</span>
+                      </div>
+                      <div className="flex justify-between pb-2 border-b border-[#0B272D]/10">
+                        <span className="text-[#5A9696] font-semibold">Lugares Confirmados:</span>
+                        <span className="font-bold text-[#0B272D]">{guestCount} Persona{guestCount > 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="flex justify-between pb-2 border-b border-[#0B272D]/10">
+                        <span className="text-[#5A9696] font-semibold">Monto Total:</span>
+                        <span className="font-bold text-[#0B272D]">${totalAmount.toLocaleString('es-AR')} ARS</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#5A9696] font-semibold">Estado de Pago:</span>
+                        {savedInvitado.estadoPago === 'en_revision' ? (
+                          <span className="bg-[#BBDB93] text-[#0B272D] font-bold px-2.5 py-0.5 rounded-full text-[10px]">
+                            ✓ Comprobante en Revisión
+                          </span>
+                        ) : (
+                          <span className="bg-[#FAF0E6] text-[#8C5A00] font-bold px-2.5 py-0.5 rounded-full text-[10px]">
+                            ⏳ Pendiente de Pago
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex justify-between pb-2 border-b border-[#0B272D]/10">
-                      <span className="text-[#5A9696] font-semibold">Lugares Confirmados:</span>
-                      <span className="font-bold text-[#0B272D]">{guestCount} Persona{guestCount > 1 ? 's' : ''}</span>
-                    </div>
-                    <div className="flex justify-between pb-2 border-b border-[#0B272D]/10">
-                      <span className="text-[#5A9696] font-semibold">Fecha:</span>
-                      <span className="font-bold text-[#0B272D]">14 Noviembre 2026 · 16:30 hs</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#5A9696] font-semibold">Comprobante:</span>
-                      <span className="font-bold text-[#0B272D]">{attachedFile ? attachedFile.name : 'Pendiente / No adjuntado'}</span>
+
+                    {/* UNIQUE PAYMENT LINK BOX */}
+                    <div className="bg-[#F5F9F8] border border-[#5A9696]/40 rounded-2xl p-4 sm:p-5 text-left max-w-md mx-auto space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🔗</span>
+                        <h4 className="font-bold text-xs uppercase tracking-wider text-[#0B272D]">
+                          Tu Enlace Único de Gestión / Pago
+                        </h4>
+                      </div>
+                      <p className="text-[11px] text-gray-600">
+                        Guarda este enlace para subir tu comprobante más tarde o consultar el estado de tu confirmación:
+                      </p>
+                      
+                      <div className="flex items-center gap-2 bg-white p-2 rounded-xl border border-[#0B272D]/15">
+                        <input
+                          type="text"
+                          readOnly
+                          value={paymentLink}
+                          className="w-full text-xs font-mono bg-transparent text-[#0B272D] focus:outline-none truncate"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCopyLink}
+                          className="shrink-0 px-3 py-1.5 rounded-lg bg-[#E0E8E5] hover:bg-[#BBDB93] text-[#0B272D] text-xs font-bold transition-colors"
+                        >
+                          {copiedLink ? '✓ Copiado' : 'Copiar'}
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={handleShareWhatsApp}
+                          className="flex-1 py-2 px-3 bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <span>💬</span>
+                          <span>Abrir en WhatsApp</span>
+                        </button>
+
+                        <Link
+                          to={`/pago?id=${savedInvitado.id}`}
+                          className="flex-1 py-2 px-3 bg-[#0B272D] hover:bg-[#051518] text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 text-center"
+                        >
+                          <span>Subir comprobante →</span>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                   <button
                     onClick={() => {
                       const title = encodeURIComponent("Boda Mariana & Carlos");
@@ -229,7 +399,7 @@ export const RsvpSection: React.FC = () => {
                     onClick={handleResetForm}
                     className="bg-[#E0E8E5] hover:bg-[#d6e4ba] text-[#0B272D] text-xs font-semibold uppercase tracking-wider px-6 py-3.5 rounded-full transition-all"
                   >
-                    Editar Respuesta
+                    Nueva Confirmación
                   </button>
                 </div>
               </div>
@@ -290,21 +460,30 @@ export const RsvpSection: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Optional Email */}
+                {/* FIELD 3: Phone (Argentina only) */}
                 <div>
                   <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                    Email de Contacto <span className="text-gray-400 text-[10px] font-normal">(opcional, para recordatorios)</span>
+                    Teléfono de Contacto (Argentina) <span className="text-[#5A9696]">*</span>
                   </label>
-                  <input
-                    type="email"
-                    placeholder="tu.email@ejemplo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full h-12 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] focus:border-[#5A9696] transition-all"
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-xs font-bold text-gray-500">
+                      🇦🇷 +54
+                    </div>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="264 123 4567 o 11 1234 5678"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full h-12 pl-18 pr-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] focus:border-[#5A9696] transition-all"
+                    />
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    Ingresa los 10 dígitos (código de área + número, sin 0 ni 15). Ej: <strong>2645123456</strong>
+                  </p>
                 </div>
 
-                {/* FIELD 3: Attendance Selector */}
+                {/* FIELD 4: Attendance Selector */}
                 <div>
                   <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
                     ¿Asistirás a la celebración? <span className="text-[#5A9696]">*</span>
@@ -340,7 +519,7 @@ export const RsvpSection: React.FC = () => {
                 {attendance === 'attending' && (
                   <div className="space-y-6 pt-2 animate-fade-in">
 
-                    {/* FIELD 4: Guest Count Numeric Stepper */}
+                    {/* Guest Count Numeric Stepper */}
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
                         <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase">
@@ -381,114 +560,206 @@ export const RsvpSection: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* FIELD 5: CONDITIONAL PAYMENT VOUCHER SECTION */}
-                    <div className="bg-[#F5F9F8] rounded-2xl p-5 sm:p-6 border border-[#5A9696]/30 space-y-5">
-
-                      {/* Bank Tag */}
+                    {/* PAYMENT METHOD SELECTION (PAGAR AHORA VS PAGAR MAS TARDE) */}
+                    <div className="bg-[#F5F9F8] rounded-2xl p-5 sm:p-6 border border-[#5A9696]/30 space-y-4">
+                      
                       <div className="flex items-center justify-between">
                         <span className="bg-[#D6E4BA] text-[#0B272D] text-[9px] font-bold tracking-wider uppercase px-3 py-1 rounded-full">
-                          🌿 DATOS PARA LA TRANSFERENCIA
+                          🌿 MODALIDAD DE PAGO
                         </span>
                         <span className="text-xs font-bold text-[#0B272D]">
-                          ${totalAmount.toLocaleString('es-AR')} ARS
+                          Total: ${totalAmount.toLocaleString('es-AR')} ARS
                         </span>
                       </div>
 
-
-
-                      {/* File Upload Dropzone */}
-                      <div>
-                        <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                          Adjuntar Comprobante de Pago <span className="text-gray-400 font-normal">(Opcional / Recomendado)</span>
-                        </label>
-
-                        {/* Hidden File Input */}
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files.length > 0) {
-                              handleFileSelect(e.target.files[0]);
-                            }
-                          }}
-                          accept=".jpg,.jpeg,.png,.webp,.pdf"
-                          className="hidden"
-                        />
-
-                        {/* Dropzone Box */}
-                        {!attachedFile ? (
-                          <div
-                            onClick={() => fileInputRef.current?.click()}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${isDragging
-                              ? 'border-[#0B272D] bg-[#D6E4BA]/30 scale-[1.02]'
-                              : 'border-[#5A9696] hover:border-[#0B272D] hover:bg-[#F9FBFA]'
-                              }`}
-                          >
-                            <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>
-                            <p className="text-xs sm:text-sm font-bold text-[#0B272D] mb-1">
-                              Arrastra tu archivo aquí o haz clic para explorar
-                            </p>
-                            <p className="text-[11px] text-[#5A9696]">
-                              Formatos permitidos: JPG, PNG, WEBP, PDF · Máximo 5 MB
-                            </p>
-
-                            <button
-                              type="button"
-                              className="mt-3 inline-block text-[11px] font-semibold text-[#5A9696] bg-white border border-[#5A9696] px-4 py-1.5 rounded-full hover:bg-[#5A9696] hover:text-white transition-colors"
-                            >
-                              Seleccionar archivo
-                            </button>
+                      {/* Switch Option */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setPaymentOption('ahora')}
+                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${
+                            paymentOption === 'ahora'
+                              ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
+                              : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#0B272D]">💳 Pagar ahora</span>
+                            {paymentOption === 'ahora' && <span className="text-xs text-[#0B272D] font-bold">✓</span>}
                           </div>
-                        ) : (
-                          /* Live Preview Chip */
-                          <div className="bg-white rounded-xl p-3.5 border border-[#5A9696]/40 flex items-center justify-between shadow-sm animate-fade-in">
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              {attachedFile.previewUrl ? (
-                                <img
-                                  src={attachedFile.previewUrl}
-                                  alt="Preview"
-                                  className="w-10 h-10 object-cover rounded-lg border border-[#0B272D]/10 shrink-0"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded-lg bg-[#E0E8E5] flex items-center justify-center text-xl shrink-0">
-                                  📄
-                                </div>
-                              )}
-                              <div className="truncate">
-                                <p className="text-xs font-bold text-[#0B272D] truncate">
-                                  {attachedFile.name}
-                                </p>
-                                <p className="text-[10px] text-[#5A9696]">
-                                  {attachedFile.sizeFormatted} · <span className="text-[#426B6B] font-semibold">Listo para enviar</span>
-                                </p>
+                          <span className="text-[10px] text-gray-500">
+                            Hacer la transferencia y adjuntar el comprobante en este momento.
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setPaymentOption('tarde')}
+                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${
+                            paymentOption === 'tarde'
+                              ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
+                              : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#0B272D]">⏳ Pagaré más tarde</span>
+                            {paymentOption === 'tarde' && <span className="text-xs text-[#0B272D] font-bold">✓</span>}
+                          </div>
+                          <span className="text-[10px] text-gray-500">
+                            Confirmar ahora y recibir un enlace único para adjuntar el comprobante luego.
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* OPTION: PAY NOW -> SHOW BANK DETAILS & DROPZONE */}
+                      {paymentOption === 'ahora' && (
+                        <div className="space-y-4 pt-2 animate-fade-in">
+                          {/* Bank details quick copy */}
+                          <div className="bg-white p-3.5 rounded-xl border border-[#0B272D]/10 space-y-2 text-xs">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500 text-[10px] uppercase font-bold">Banco:</span>
+                              <span className="font-bold text-[#0B272D]">{bankData.bank}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500 text-[10px] uppercase font-bold">Titular:</span>
+                              <span className="font-bold text-[#0B272D]">{bankData.owner}</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+                              <span className="text-gray-500 text-[10px] uppercase font-bold">Alias:</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-[#0B272D]">{bankData.alias}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyBank(bankData.alias, 'alias')}
+                                  className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#E0E8E5] hover:bg-[#BBDB93] text-[#0B272D]"
+                                >
+                                  {copiedBankField === 'alias' ? '✓' : 'Copiar'}
+                                </button>
                               </div>
                             </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="bg-[#BBDB93] text-[#0B272D] text-[9px] font-bold px-2.5 py-1 rounded-full">
-                                ✓ Adjuntado
-                              </span>
-                              <button
-                                type="button"
-                                onClick={handleClearFile}
-                                className="w-7 h-7 rounded-full bg-[#FAF0F0] text-[#8C1C00] hover:bg-[#8C1C00] hover:text-white flex items-center justify-center text-xs font-bold transition-colors"
-                                title="Eliminar archivo"
-                              >
-                                ✕
-                              </button>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500 text-[10px] uppercase font-bold">CBU:</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-[#0B272D] text-[11px]">{bankData.cbu}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyBank(bankData.cbu, 'cbu')}
+                                  className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#E0E8E5] hover:bg-[#BBDB93] text-[#0B272D]"
+                                >
+                                  {copiedBankField === 'cbu' ? '✓' : 'Copiar'}
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        )}
 
-                        {fileError && (
-                          <p className="text-xs text-[#8C1C00] font-semibold mt-2">
-                            ⚠️ {fileError}
+                          {/* File Upload Dropzone */}
+                          <div>
+                            <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                              Adjuntar Comprobante de Pago <span className="text-gray-400 font-normal">(Opcional / Recomendado)</span>
+                            </label>
+
+                            {/* Hidden File Input */}
+                            <input
+                              type="file"
+                              ref={fileInputRef}
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files.length > 0) {
+                                  handleFileSelect(e.target.files[0]);
+                                }
+                              }}
+                              accept=".jpg,.jpeg,.png,.webp,.pdf"
+                              className="hidden"
+                            />
+
+                            {/* Dropzone Box */}
+                            {!attachedFile ? (
+                              <div
+                                onClick={() => fileInputRef.current?.click()}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${
+                                  isDragging
+                                    ? 'border-[#0B272D] bg-[#D6E4BA]/30 scale-[1.02]'
+                                    : 'border-[#5A9696] hover:border-[#0B272D] hover:bg-[#F9FBFA]'
+                                }`}
+                              >
+                                <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>
+                                <p className="text-xs sm:text-sm font-bold text-[#0B272D] mb-1">
+                                  Arrastra tu archivo aquí o haz clic para explorar
+                                </p>
+                                <p className="text-[11px] text-[#5A9696]">
+                                  Formatos permitidos: JPG, PNG, WEBP, PDF · Máximo 5 MB
+                                </p>
+
+                                <button
+                                  type="button"
+                                  className="mt-3 inline-block text-[11px] font-semibold text-[#5A9696] bg-white border border-[#5A9696] px-4 py-1.5 rounded-full hover:bg-[#5A9696] hover:text-white transition-colors"
+                                >
+                                  Seleccionar archivo
+                                </button>
+                              </div>
+                            ) : (
+                              /* Live Preview Chip */
+                              <div className="bg-white rounded-xl p-3.5 border border-[#5A9696]/40 flex items-center justify-between shadow-sm animate-fade-in">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                  {attachedFile.previewUrl ? (
+                                    <img
+                                      src={attachedFile.previewUrl}
+                                      alt="Preview"
+                                      className="w-10 h-10 object-cover rounded-lg border border-[#0B272D]/10 shrink-0"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-lg bg-[#E0E8E5] flex items-center justify-center text-xl shrink-0">
+                                      📄
+                                    </div>
+                                  )}
+                                  <div className="truncate">
+                                    <p className="text-xs font-bold text-[#0B272D] truncate">
+                                      {attachedFile.name}
+                                    </p>
+                                    <p className="text-[10px] text-[#5A9696]">
+                                      {attachedFile.sizeFormatted} · <span className="text-[#426B6B] font-semibold">Listo para enviar</span>
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="bg-[#BBDB93] text-[#0B272D] text-[9px] font-bold px-2.5 py-1 rounded-full">
+                                    ✓ Adjuntado
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={handleClearFile}
+                                    className="w-7 h-7 rounded-full bg-[#FAF0F0] text-[#8C1C00] hover:bg-[#8C1C00] hover:text-white flex items-center justify-center text-xs font-bold transition-colors"
+                                    title="Eliminar archivo"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {fileError && (
+                              <p className="text-xs text-[#8C1C00] font-semibold mt-2">
+                                ⚠️ {fileError}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* OPTION: PAY LATER -> HELPFUL NOTICE */}
+                      {paymentOption === 'tarde' && (
+                        <div className="bg-[#E0E8E5]/50 rounded-xl p-4 border border-[#0B272D]/10 text-xs text-[#0B272D] space-y-1 animate-fade-in">
+                          <p className="font-bold flex items-center gap-1.5">
+                            <span>ℹ️</span> Tu lugar quedará reservado inmediatamente
                           </p>
-                        )}
-                      </div>
+                          <p className="text-gray-600 text-[11px]">
+                            Al enviar el formulario, recibirás tu <strong>enlace exclusivo de pago</strong> y también podrás subir el comprobante cuando quieras desde la sección de comprobantes buscando por tu número de teléfono.
+                          </p>
+                        </div>
+                      )}
 
                     </div>
 
@@ -505,21 +776,22 @@ export const RsvpSection: React.FC = () => {
                         <option value="ninguno">Ninguna restricción (Menú tradicional)</option>
                         <option value="vegetariano">Menú Vegetariano</option>
                         <option value="celiaco">Menú Celíaco / Sin TACC</option>
-
                       </select>
                     </div>
+
                     {/* Comment */}
                     <div>
                       <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
                         ¿Algún mensaje para los novios?
                       </label>
                       <textarea
+                        rows={2}
                         value={comment}
+                        placeholder="Escribe un mensaje de cariño o deseos..."
                         onChange={(e) => setComment(e.target.value)}
-                        className="w-full h-12 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
+                        className="w-full p-3 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
                       />
                     </div>
-
 
                     {/* Song Request */}
                     <div>
@@ -551,7 +823,7 @@ export const RsvpSection: React.FC = () => {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                         </svg>
-                        <span>ENVIANDO CONFIRMACIÓN...</span>
+                        <span>GUARDANDO CONFIRMACIÓN...</span>
                       </>
                     ) : (
                       <>
@@ -574,6 +846,109 @@ export const RsvpSection: React.FC = () => {
         </div>
 
       </div>
+
+      {/* POPUP MODAL: DUPLICATE PHONE DETECTED */}
+      {duplicateGuest && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setDuplicateGuest(null)}
+        >
+          <div 
+            className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#0B272D]/15 text-center relative space-y-6 transform transition-all animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button top right */}
+            <button
+              type="button"
+              onClick={() => setDuplicateGuest(null)}
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center text-base font-bold transition-colors"
+              aria-label="Cerrar ventana"
+            >
+              ✕
+            </button>
+
+            {/* Icon badge */}
+            <div className="w-16 h-16 rounded-full bg-[#FAF0E6] border-2 border-[#D4A373]/50 text-[#8C5A00] text-3xl flex items-center justify-center mx-auto shadow-sm">
+              📋
+            </div>
+
+            {/* Title & Description */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#5A9696]">
+                Confirmación Ya Registrada
+              </span>
+              <h3 className="text-2xl font-serif-display font-bold text-[#0B272D]">
+                ¡Este teléfono ya confirmó asistencia!
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
+                Ya encontramos un registro en el sistema con el número{' '}
+                <strong className="font-mono text-[#0B272D] font-bold bg-[#E0E8E5]/70 px-1.5 py-0.5 rounded">
+                  {duplicateGuest.telefono}
+                </strong>. No es necesario volver a completar el formulario.
+              </p>
+            </div>
+
+            {/* Summary card */}
+            <div className="bg-[#F5F9F8] border border-[#5A9696]/30 rounded-2xl p-4 text-left space-y-2.5">
+              <div className="flex justify-between items-center pb-2 border-b border-[#0B272D]/10">
+                <span className="text-xs text-gray-500 font-medium">Titular:</span>
+                <span className="text-sm font-bold text-[#0B272D]">
+                  {duplicateGuest.nombre} {duplicateGuest.apellido}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-[#0B272D]/10">
+                <span className="text-xs text-gray-500 font-medium">Asistencia:</span>
+                <span className="text-xs font-semibold text-[#0B272D]">
+                  {duplicateGuest.asistencia === 'attending' 
+                    ? `✓ Sí asiste (${duplicateGuest.invitados} ${duplicateGuest.invitados > 1 ? 'personas' : 'persona'})`
+                    : '✗ No asiste'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500 font-medium">Estado del Pago:</span>
+                <div>
+                  {duplicateGuest.estadoPago === 'aprobado' ? (
+                    <span className="bg-[#EBF7EE] text-[#1B6E32] font-bold px-2.5 py-0.5 rounded-full text-xs">
+                      ✓ Pago Aprobado
+                    </span>
+                  ) : duplicateGuest.estadoPago === 'en_revision' ? (
+                    <span className="bg-[#EBF5FB] text-[#1D6F93] font-bold px-2.5 py-0.5 rounded-full text-xs">
+                      🔍 En Revisión
+                    </span>
+                  ) : duplicateGuest.estadoPago === 'no_aplica' ? (
+                    <span className="bg-gray-100 text-gray-600 font-bold px-2.5 py-0.5 rounded-full text-xs">
+                      No aplica
+                    </span>
+                  ) : (
+                    <span className="bg-[#FAF0E6] text-[#8C5A00] font-bold px-2.5 py-0.5 rounded-full text-xs">
+                      ⏳ Pendiente de Pago
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Link
+                to={`/pago?id=${duplicateGuest.id}`}
+                className="flex-1 py-3.5 px-4 bg-[#0B272D] hover:bg-[#051518] text-white text-xs sm:text-sm font-bold rounded-xl transition-all text-center flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                onClick={() => setDuplicateGuest(null)}
+              >
+                <span>💳</span>
+                <span>Ver mi reserva o subir comprobante →</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setDuplicateGuest(null)}
+                className="py-3.5 px-5 bg-[#E0E8E5] hover:bg-[#D6E4BA] text-[#0B272D] text-xs sm:text-sm font-bold rounded-xl transition-all"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
