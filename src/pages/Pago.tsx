@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { 
-  getInvitadoById, 
-  getInvitadosByTelefono, 
-  updateComprobanteInvitado, 
-  type Invitado 
+import {
+  getInvitadoById,
+  getInvitadosByTelefono,
+  updateComprobanteInvitado,
+  type Invitado
 } from '../services/rsvpService';
 
 interface AttachedFile {
@@ -53,15 +53,6 @@ export const Pago: React.FC = () => {
     else return (bytes / 1048576).toFixed(1) + ' MB';
   };
 
-  // Load invitation if ID in URL
-  useEffect(() => {
-    if (idFromUrl) {
-      loadInvitadoById(idFromUrl);
-    } else {
-      setInvitado(null);
-    }
-  }, [idFromUrl]);
-
   const loadInvitadoById = async (id: string) => {
     setLoadingInitial(true);
     setGeneralError(null);
@@ -81,6 +72,16 @@ export const Pago: React.FC = () => {
       setLoadingInitial(false);
     }
   };
+
+  // Load invitation if ID in URL & scroll to top
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (idFromUrl) {
+      loadInvitadoById(idFromUrl);
+    } else {
+      setInvitado(null);
+    }
+  }, [idFromUrl]);
 
   const handleSearchByPhone = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,7 +211,7 @@ export const Pago: React.FC = () => {
       <div className="absolute bottom-10 right-[-80px] w-96 h-96 bg-[#5A9696]/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-3xl mx-auto relative z-10">
-        
+
         {/* Top Header */}
         <div className="text-center mb-8">
           <Link
@@ -244,7 +245,7 @@ export const Pago: React.FC = () => {
             <div className="h-2 bg-gradient-to-r from-[#5A9696] via-[#BBDB93] to-[#5A9696]" />
 
             <div className="p-6 sm:p-10 space-y-6">
-              
+
               {generalError && (
                 <div className="bg-[#FAF0F0] border border-[#E5BABA] text-[#8C1C00] p-4 rounded-xl text-xs font-medium flex items-start gap-3">
                   <span className="text-base mt-0.5">⚠️</span>
@@ -351,7 +352,7 @@ export const Pago: React.FC = () => {
             <div className="h-2 bg-gradient-to-r from-[#5A9696] via-[#BBDB93] to-[#5A9696]" />
 
             <div className="p-6 sm:p-10 space-y-8">
-              
+
               {/* Header inside Card */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#0B272D]/10">
                 <div>
@@ -413,7 +414,7 @@ export const Pago: React.FC = () => {
 
               {/* SUMMARY GRID & BANK DETAILS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
+
                 {/* Left: Summary Details Card */}
                 <div className="bg-[#F7FAF9] rounded-2xl p-5 border border-[#0B272D]/10 space-y-3 text-xs">
                   <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] pb-2 border-b border-[#0B272D]/10 flex items-center justify-between">
@@ -456,50 +457,7 @@ export const Pago: React.FC = () => {
                   )}
                 </div>
 
-                {/* Right: Bank Transfer Details Card */}
-                <div className="bg-[#F5F9F8] rounded-2xl p-5 border border-[#5A9696]/30 space-y-3 text-xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#5A9696]/20">
-                    <span className="bg-[#D6E4BA] text-[#0B272D] text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full">
-                      DATOS BANCARIOS
-                    </span>
-                    <span className="text-[#5A9696] font-bold text-[11px]">{bankData.bank}</span>
-                  </div>
 
-                  <div className="space-y-2.5">
-                    <div>
-                      <span className="text-gray-500 block text-[10px] uppercase">Titulares de la cuenta</span>
-                      <p className="font-bold text-[#0B272D]">{bankData.owner}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
-                      <div>
-                        <span className="text-gray-500 block text-[9px] uppercase font-bold">Alias</span>
-                        <span className="font-mono font-bold text-[#0B272D]">{bankData.alias}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(bankData.alias, 'alias')}
-                        className="text-[10px] font-bold px-2.5 py-1 rounded bg-[#E0E8E5] hover:bg-[#BBDB93] text-[#0B272D] transition-colors"
-                      >
-                        {copiedField === 'alias' ? '✓ Copiado' : 'Copiar'}
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
-                      <div>
-                        <span className="text-gray-500 block text-[9px] uppercase font-bold">CBU</span>
-                        <span className="font-mono font-bold text-xs text-[#0B272D]">{bankData.cbu}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(bankData.cbu, 'cbu')}
-                        className="text-[10px] font-bold px-2.5 py-1 rounded bg-[#E0E8E5] hover:bg-[#BBDB93] text-[#0B272D] transition-colors"
-                      >
-                        {copiedField === 'cbu' ? '✓ Copiado' : 'Copiar'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
 
               </div>
 
@@ -539,11 +497,10 @@ export const Pago: React.FC = () => {
                           handleFileSelect(e.dataTransfer.files[0]);
                         }
                       }}
-                      className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-[#F9FBFA] ${
-                        isDragging
+                      className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-[#F9FBFA] ${isDragging
                           ? 'border-[#0B272D] bg-[#D6E4BA]/40 scale-[1.01]'
                           : 'border-[#5A9696]/60 hover:border-[#0B272D] hover:bg-white'
-                      }`}
+                        }`}
                     >
                       <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>
                       <p className="text-xs sm:text-sm font-bold text-[#0B272D] mb-1">

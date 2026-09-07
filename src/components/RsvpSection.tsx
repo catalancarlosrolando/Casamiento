@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  createInvitado, 
-  TelefonoDuplicadoError, 
-  isArgentinaPhoneValid, 
-  type Invitado 
+import {
+  createInvitado,
+  TelefonoDuplicadoError,
+  isArgentinaPhoneValid,
+  type Invitado
 } from '../services/rsvpService';
 
 interface AttachedFile {
@@ -162,8 +162,8 @@ export const RsvpSection: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const fileToUpload = (attendance === 'attending' && paymentOption === 'ahora') 
-        ? attachedFile?.file 
+      const fileToUpload = (attendance === 'attending' && paymentOption === 'ahora')
+        ? attachedFile?.file
         : null;
 
       const result = await createInvitado(
@@ -178,8 +178,8 @@ export const RsvpSection: React.FC = () => {
           cancion: songRequest,
           opcionPago: attendance === 'attending' ? paymentOption : 'no_aplica',
           montoTotal: totalAmount,
-          estadoPago: attendance !== 'attending' 
-            ? 'no_aplica' 
+          estadoPago: attendance !== 'attending'
+            ? 'no_aplica'
             : (fileToUpload ? 'en_revision' : 'pendiente'),
         },
         fileToUpload
@@ -345,7 +345,7 @@ export const RsvpSection: React.FC = () => {
                       <p className="text-[11px] text-gray-600">
                         Guarda este enlace para subir tu comprobante más tarde o consultar el estado de tu confirmación:
                       </p>
-                      
+
                       <div className="flex items-center gap-2 bg-white p-2 rounded-xl border border-[#0B272D]/15">
                         <input
                           type="text"
@@ -562,7 +562,7 @@ export const RsvpSection: React.FC = () => {
 
                     {/* PAYMENT METHOD SELECTION (PAGAR AHORA VS PAGAR MAS TARDE) */}
                     <div className="bg-[#F5F9F8] rounded-2xl p-5 sm:p-6 border border-[#5A9696]/30 space-y-4">
-                      
+
                       <div className="flex items-center justify-between">
                         <span className="bg-[#D6E4BA] text-[#0B272D] text-[9px] font-bold tracking-wider uppercase px-3 py-1 rounded-full">
                           🌿 MODALIDAD DE PAGO
@@ -577,11 +577,10 @@ export const RsvpSection: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setPaymentOption('ahora')}
-                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${
-                            paymentOption === 'ahora'
+                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${paymentOption === 'ahora'
                               ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
                               : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-[#0B272D]">💳 Pagar ahora</span>
@@ -595,11 +594,10 @@ export const RsvpSection: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setPaymentOption('tarde')}
-                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${
-                            paymentOption === 'tarde'
+                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${paymentOption === 'tarde'
                               ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
                               : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-[#0B272D]">⏳ Pagaré más tarde</span>
@@ -614,43 +612,7 @@ export const RsvpSection: React.FC = () => {
                       {/* OPTION: PAY NOW -> SHOW BANK DETAILS & DROPZONE */}
                       {paymentOption === 'ahora' && (
                         <div className="space-y-4 pt-2 animate-fade-in">
-                          {/* Bank details quick copy */}
-                          <div className="bg-white p-3.5 rounded-xl border border-[#0B272D]/10 space-y-2 text-xs">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500 text-[10px] uppercase font-bold">Banco:</span>
-                              <span className="font-bold text-[#0B272D]">{bankData.bank}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500 text-[10px] uppercase font-bold">Titular:</span>
-                              <span className="font-bold text-[#0B272D]">{bankData.owner}</span>
-                            </div>
-                            <div className="flex justify-between items-center pt-1 border-t border-gray-100">
-                              <span className="text-gray-500 text-[10px] uppercase font-bold">Alias:</span>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono font-bold text-[#0B272D]">{bankData.alias}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleCopyBank(bankData.alias, 'alias')}
-                                  className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#E0E8E5] hover:bg-[#BBDB93] text-[#0B272D]"
-                                >
-                                  {copiedBankField === 'alias' ? '✓' : 'Copiar'}
-                                </button>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500 text-[10px] uppercase font-bold">CBU:</span>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono font-bold text-[#0B272D] text-[11px]">{bankData.cbu}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleCopyBank(bankData.cbu, 'cbu')}
-                                  className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#E0E8E5] hover:bg-[#BBDB93] text-[#0B272D]"
-                                >
-                                  {copiedBankField === 'cbu' ? '✓' : 'Copiar'}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
+
 
                           {/* File Upload Dropzone */}
                           <div>
@@ -678,11 +640,10 @@ export const RsvpSection: React.FC = () => {
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
-                                className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${
-                                  isDragging
+                                className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${isDragging
                                     ? 'border-[#0B272D] bg-[#D6E4BA]/30 scale-[1.02]'
                                     : 'border-[#5A9696] hover:border-[#0B272D] hover:bg-[#F9FBFA]'
-                                }`}
+                                  }`}
                               >
                                 <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>
                                 <p className="text-xs sm:text-sm font-bold text-[#0B272D] mb-1">
@@ -849,11 +810,11 @@ export const RsvpSection: React.FC = () => {
 
       {/* POPUP MODAL: DUPLICATE PHONE DETECTED */}
       {duplicateGuest && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
           onClick={() => setDuplicateGuest(null)}
         >
-          <div 
+          <div
             className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#0B272D]/15 text-center relative space-y-6 transform transition-all animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
@@ -899,7 +860,7 @@ export const RsvpSection: React.FC = () => {
               <div className="flex justify-between items-center pb-2 border-b border-[#0B272D]/10">
                 <span className="text-xs text-gray-500 font-medium">Asistencia:</span>
                 <span className="text-xs font-semibold text-[#0B272D]">
-                  {duplicateGuest.asistencia === 'attending' 
+                  {duplicateGuest.asistencia === 'attending'
                     ? `✓ Sí asiste (${duplicateGuest.invitados} ${duplicateGuest.invitados > 1 ? 'personas' : 'persona'})`
                     : '✗ No asiste'}
                 </span>
