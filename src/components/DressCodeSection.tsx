@@ -25,7 +25,7 @@ export const DressCodeSection: React.FC = () => {
       tagTextColor: '#0B272D',
       title: 'Vestido Largo de Gala',
       subtitle: 'Siluetas fluidas y tonos botánicos',
-      image: './public/images/dress.webp', // Can be replaced by the user with any image URL
+      image: '/images/dress.webp',
       backdropColor: '#0E2F37',
       icon: '👗',
     },
@@ -36,7 +36,7 @@ export const DressCodeSection: React.FC = () => {
       tagTextColor: '#0B272D',
       title: 'Traje Formal / Clásico',
       subtitle: 'Elegancia atemporal y sobria',
-      image: './public/images/suits.webp', // Can be replaced by the user with any image URL
+      image: '/images/suits.webp',
       backdropColor: '#183B42',
       icon: '🤵',
     },
@@ -47,7 +47,7 @@ export const DressCodeSection: React.FC = () => {
       tagTextColor: '#0B272D',
       title: 'Vestido Cóctel / Midi',
       subtitle: 'Corte refinado y moderno',
-      image: './public/images/dress1.1.jpg', // Can be replaced by the user with any image URL
+      image: '/images/dress1.1.jpg',
       backdropColor: '#274640',
       icon: '✨',
     },
@@ -58,7 +58,7 @@ export const DressCodeSection: React.FC = () => {
       tagTextColor: '#0B272D',
       title: 'Esmoquin de Noche',
       subtitle: 'Distinción y presencia formal',
-      image: './public/images/suits1.webp', // Can be replaced by the user with any image URL
+      image: '/images/suits1.webp',
       backdropColor: '#102A30',
       icon: '🎩',
     },
@@ -69,7 +69,7 @@ export const DressCodeSection: React.FC = () => {
       tagTextColor: '#0B272D',
       title: 'Enterito / Mono de Fiesta',
       subtitle: 'Vanguardia y comodidad elegante',
-      image: './public/images/dress1.2.jpg', // Can be replaced by the user with any image URL
+      image: '/images/dress1.2.jpg',
       backdropColor: '#1A3338',
       icon: '💫',
     },

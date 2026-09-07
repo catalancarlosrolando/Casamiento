@@ -1,4 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { logout } from '../services/authService';
+import { useNavigate } from 'react-router-dom';
+import { isAuthorizedUser } from '../services/AuthorizedUser';
+
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -13,13 +19,26 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const navLinks = [
-    { name: 'INICIO', href: '#hero' },
     { name: 'Guarda La Fecha', href: '#save-the-date' },
     { name: 'ITINERARIO', href: '#itinerary' },
     { name: 'VESTIMENTA', href: '#dress-code' },
     { name: 'UBICACIÓN', href: '#venue' },
 
+
   ];
+
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  //quiero que esta variable me determine si estoy en "/" o no 
+  const home = window.location.pathname === "/";
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  // Verificar si el usuario está autorizado
+  const isAdmin = user && isAuthorizedUser(user.email);
 
   return (
     <header
@@ -39,15 +58,64 @@ export const Navbar: React.FC = () => {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
+          {home ? (
+            navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-xs tracking-[0.15em] uppercase font-semibold text-[#E0E8E5]/90 hover:text-[#BBDB93] transition-colors"
+              >
+                {link.name}
+              </a>
+            ))
+          ) : (
+            <Link
+              to="/"
               className="text-xs tracking-[0.15em] uppercase font-semibold text-[#E0E8E5]/90 hover:text-[#BBDB93] transition-colors"
             >
-              {link.name}
-            </a>
-          ))}
+              Inicio
+            </Link>
+          )
+          }
+
+          {/* Login Button */}
+          <div className="flex items-center gap-4">
+            {user ? (
+              <>
+                {/* Mostrar botón de Dashboard solo si es admin */}
+                {isAdmin && (
+                  <Link
+                    to="/dashboard"
+                    className="text-white hover:text-[#BBDB93] text-xs uppercase tracking-wider font-semibold transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="bg-white text-text hover:text-white hover:bg-blue-9 dark:hover:bg-purple-9 dark:hover:text-white px-3 sm:px-4 py-1 rounded text-xs sm:text-sm transition-colors"
+                >
+                  Cerrar Sesión
+                </button>
+                {user.photoURL && (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || 'Usuario'}
+                    className="w-8 h-8 rounded-full border-2 border-blue-9 dark:border-purple-9"
+                    referrerPolicy="no-referrer"
+                  />
+                )}
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="bg-white text-text hover:text-white hover:bg-blue-9 dark:hover:bg-purple-9 dark:hover:text-white px-3 sm:px-4 py-1 rounded text-xs sm:text-sm transition-colors"
+              >
+                Iniciar Sesión
+              </Link>
+            )}
+          </div>
+
           <a
             href="#rsvp"
             className="bg-[#BBDB93] hover:bg-[#d6e4ba] text-[#0B272D] text-xs font-bold tracking-wider uppercase px-5 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 shadow-sm"

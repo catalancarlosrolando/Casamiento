@@ -93,7 +93,7 @@ export const HeroSection: React.FC = () => {
         </div>
 
         {/* Script Intro */}
-        <p className="font-script text-2xl sm:text-3xl lg:text-4xl text-[#D6E4BA] mb-3 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+        <p className="font-script text-2xl sm:text-3xl lg:text-4xl text-[#D6E4BA] mb-3 font-normal max-w-1xl mx-auto leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
           Ven y celebra con nosotros el casamiento de
         </p>
 

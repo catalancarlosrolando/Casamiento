@@ -18,7 +18,7 @@ export const VenueSection: React.FC = () => {
       subtitle: 'Área al aire libre para el intercambio de votos rodeada de vegetación natural.',
       icon: '🌿',
       tag: 'CEREMONIA',
-      image: './public/images/Salon-fuera.webp', // Puedes agregar la ruta de la imagen aquí (ej: './public/images/jardin.jpg')
+      image: '/images/Salon-fuera.webp',
       bgGradient: 'from-[#13383F] via-[#183B42] to-[#0B272D]',
     },
     {
@@ -26,7 +26,7 @@ export const VenueSection: React.FC = () => {
       subtitle: 'Salón principal con iluminación cálida, ventanales panorámicos y pista de baile.',
       icon: '🏰',
       tag: 'RECEPCIÓN & FIESTA',
-      image: './public/images/Salonfiesta.webp', // Puedes agregar la ruta de la imagen aquí (ej: './public/images/salon.jpg')
+      image: '/images/Salonfiesta.webp',
       bgGradient: 'from-[#0B272D] via-[#183B42] to-[#13383F]',
     },
     {
@@ -34,7 +34,7 @@ export const VenueSection: React.FC = () => {
       subtitle: 'Espacio de bienvenida para el brindis al anochecer y barra de tragos.',
       icon: '🥂',
       tag: 'Tragos',
-      image: './public/images/barra.webp', // Puedes agregar la ruta de la imagen aquí (ej: './public/images/barra.jpg')
+      image: '/images/barra.webp',
       bgGradient: 'from-[#213B36] via-[#183B42] to-[#0B272D]',
     },
   ];

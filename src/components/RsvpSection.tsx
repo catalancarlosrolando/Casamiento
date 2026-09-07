@@ -13,10 +13,10 @@ export const RsvpSection: React.FC = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [attendance, setAttendance] = useState<'attending' | 'declined' | ''>('attending');
-  const [guestCount, setGuestCount] = useState<number>(2);
+  const [guestCount, setGuestCount] = useState<number>(1);
   const [dietary, setDietary] = useState<string>('ninguno');
-  const [dietaryNotes, setDietaryNotes] = useState<string>('');
   const [songRequest, setSongRequest] = useState<string>('');
+  const [comment, setComment] = useState<string>('');
 
   // File Upload State
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
@@ -216,8 +216,8 @@ export const RsvpSection: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
                   <button
                     onClick={() => {
-                      const title = encodeURIComponent("Boda Valentina & Mateo");
-                      const details = encodeURIComponent("Casamiento en Villa Huapi, Bariloche");
+                      const title = encodeURIComponent("Boda Mariana & Carlos");
+                      const details = encodeURIComponent("Casamiento en Complejo UNSJ, Ullum");
                       const dates = "20261114T193000Z/20261115T080000Z";
                       window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`, '_blank');
                     }}
@@ -504,21 +504,22 @@ export const RsvpSection: React.FC = () => {
                       >
                         <option value="ninguno">Ninguna restricción (Menú tradicional)</option>
                         <option value="vegetariano">Menú Vegetariano</option>
-                        <option value="vegano">Menú Vegano</option>
                         <option value="celiaco">Menú Celíaco / Sin TACC</option>
-                        <option value="otro">Otras alergias o requerimientos</option>
-                      </select>
 
-                      {dietary === 'otro' && (
-                        <input
-                          type="text"
-                          placeholder="Especifica tus alergias (ej: mariscos, frutos secos, lactosa)..."
-                          value={dietaryNotes}
-                          onChange={(e) => setDietaryNotes(e.target.value)}
-                          className="w-full h-10 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-xs text-[#0B272D] focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
-                        />
-                      )}
+                      </select>
                     </div>
+                    {/* Comment */}
+                    <div>
+                      <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                        ¿Algún mensaje para los novios?
+                      </label>
+                      <textarea
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        className="w-full h-12 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
+                      />
+                    </div>
+
 
                     {/* Song Request */}
                     <div>

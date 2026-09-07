@@ -11,14 +11,14 @@ export const Footer: React.FC = () => {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#5A9696]/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-4xl mx-auto text-center relative z-10 space-y-8">
-        
+
         {/* Monogram */}
         <div className="space-y-2">
           <span className="font-script text-5xl sm:text-6xl text-[#D6E4BA]">
-            Shweta & Abhinav
+            Mariana & Carlos
           </span>
           <p className="text-xs tracking-[0.3em] uppercase text-[#BBDB93] font-semibold">
-            07 · NOVIEMBRE · 2026 · GHAZIABAD
+            07 · NOVIEMBRE · 2026 · Ullum
           </p>
         </div>
 
