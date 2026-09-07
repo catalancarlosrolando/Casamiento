@@ -38,13 +38,6 @@ export const Pago: React.FC = () => {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Bank Info
-  const bankData = {
-    cbu: '0000003100012345678901',
-    alias: 'BODA.VALEN.MATEO',
-    bank: 'Banco Santander',
-    owner: 'Valentina Rossi & Mateo Fernández',
-  };
 
   // Format file size
   const formatFileSize = (bytes: number): string => {
@@ -498,8 +491,8 @@ export const Pago: React.FC = () => {
                         }
                       }}
                       className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-[#F9FBFA] ${isDragging
-                          ? 'border-[#0B272D] bg-[#D6E4BA]/40 scale-[1.01]'
-                          : 'border-[#5A9696]/60 hover:border-[#0B272D] hover:bg-white'
+                        ? 'border-[#0B272D] bg-[#D6E4BA]/40 scale-[1.01]'
+                        : 'border-[#5A9696]/60 hover:border-[#0B272D] hover:bg-white'
                         }`}
                     >
                       <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>

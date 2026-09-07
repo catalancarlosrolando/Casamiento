@@ -41,19 +41,14 @@ export const RsvpSection: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [savedInvitado, setSavedInvitado] = useState<Invitado | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedBankField, setCopiedBankField] = useState<string | null>(null);
+
 
   // Price per person
   const pricePerPerson = 75000;
   const totalAmount = guestCount * pricePerPerson;
 
   // Bank Data
-  const bankData = {
-    cbu: '0000003100012345678901',
-    alias: 'BODA.VALEN.MATEO',
-    bank: 'Banco Santander',
-    owner: 'Valentina Rossi & Mateo Fernández',
-  };
+
 
   // File size formatter
   const formatFileSize = (bytes: number): string => {
@@ -231,11 +226,6 @@ export const RsvpSection: React.FC = () => {
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
-  const handleCopyBank = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedBankField(field);
-    setTimeout(() => setCopiedBankField(null), 2000);
-  };
 
   const paymentLink = savedInvitado ? `${window.location.origin}/pago?id=${savedInvitado.id}` : '';
 
@@ -578,8 +568,8 @@ export const RsvpSection: React.FC = () => {
                           type="button"
                           onClick={() => setPaymentOption('ahora')}
                           className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${paymentOption === 'ahora'
-                              ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
-                              : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
+                            ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
+                            : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
                             }`}
                         >
                           <div className="flex items-center justify-between">
@@ -595,8 +585,8 @@ export const RsvpSection: React.FC = () => {
                           type="button"
                           onClick={() => setPaymentOption('tarde')}
                           className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${paymentOption === 'tarde'
-                              ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
-                              : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
+                            ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
+                            : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
                             }`}
                         >
                           <div className="flex items-center justify-between">
@@ -641,8 +631,8 @@ export const RsvpSection: React.FC = () => {
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
                                 className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${isDragging
-                                    ? 'border-[#0B272D] bg-[#D6E4BA]/30 scale-[1.02]'
-                                    : 'border-[#5A9696] hover:border-[#0B272D] hover:bg-[#F9FBFA]'
+                                  ? 'border-[#0B272D] bg-[#D6E4BA]/30 scale-[1.02]'
+                                  : 'border-[#5A9696] hover:border-[#0B272D] hover:bg-[#F9FBFA]'
                                   }`}
                               >
                                 <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>
