@@ -43,16 +43,6 @@ export const HeroSection: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const handleAddToCalendar = () => {
-    const title = encodeURIComponent("Casamiento de Mariana & Carlos");
-    const details = encodeURIComponent("Acompáñanos a celebrar el casamiento de Mariana y Carlos en Complejo Nautico Ullum.");
-    const location = encodeURIComponent("Salon Complejo Nautico Ullum, San Juan");
-    // 21:00 hs (7 Nov) a 05:00 hs (8 Nov) en Hora Argentina (UTC-3) -> 00:00Z a 08:00Z (8 Nov)
-    const dates = "20261108T000000Z/20261108T080000Z";
-    const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}&ctz=America/Argentina/Buenos_Aires`;
-    window.open(googleUrl, '_blank');
-  };
-
   return (
     <section id="hero" className="relative min-h-screen flex flex-col justify-between items-center text-center overflow-hidden pt-28 pb-16 bg-[#0B272D00]">
       {/* Spectacular Ken Burns Background Slideshow */}
@@ -115,7 +105,7 @@ export const HeroSection: React.FC = () => {
         <div className="LoweControl sm:mt-28 lg:mt-36 flex flex-col items-center w-full">
 
           {/* Event Quick-Info Pill - Hidden on Mobile, Glassmorphic on Desktop */}
-          <div className="hidden sm:flex bg-black/30 backdrop-blur-md text-white rounded-full py-2.5 px-8 flex-row items-center gap-8 shadow-2xl border border-white/20 mb-8 font-sans transition-all">
+          <div className="hidden lg:flex bg-black/30 backdrop-blur-md text-white rounded-full py-2.5 px-8 flex-row items-center gap-8 shadow-2xl border border-white/20 mb-8 font-sans transition-all">
             <div className="text-left">
               <p className="text-xs sm:text-sm font-bold text-white leading-tight drop-shadow-sm">
                 Sábado, 7 de Noviembre de 2026
@@ -137,36 +127,9 @@ export const HeroSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Hero Action CTA Group */}
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center font-sans mb-8">
-            <a
-              href="#rsvp"
-              className="inline-flex items-center justify-center bg-[#BBDB93]/90 hover:bg-[#BBDB93] text-[#0B272D] font-bold text-xs sm:text-sm tracking-widest uppercase px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-xl backdrop-blur-sm"
-            >
-              CONFIRMAR ASISTENCIA
-            </a>
-            <button
-              onClick={handleAddToCalendar}
-              className="inline-flex items-center justify-center bg-black/30 hover:bg-black/50 text-white border border-white/40 font-semibold text-xs sm:text-sm tracking-wider uppercase px-7 py-4 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg"
-            >
-              AGENDAR EN CALENDARIO
-            </button>
-          </div>
 
-          {/* Slideshow Indicator Dots */}
-          <div className="flex items-center justify-center gap-2.5">
-            {heroImages.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentImageIndex(i)}
-                className={`rounded-full transition-all duration-700 ${i === currentImageIndex
-                  ? 'w-8 h-2 bg-[#BBDB93] shadow-[0_0_8px_#BBDB93]'
-                  : 'w-2 h-2 bg-white/40 hover:bg-white/70'
-                  }`}
-                aria-label={`Foto ${i + 1}`}
-              />
-            ))}
-          </div>
+
+
         </div>
       </div>
 

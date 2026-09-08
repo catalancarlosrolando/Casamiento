@@ -238,157 +238,303 @@ export const Dashboard = () => {
               No se encontraron registros con los filtros seleccionados.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#F7FAF9] border-b border-[#0B272D]/10 text-gray-500 uppercase font-bold text-[10px] tracking-wider">
-                  <tr>
-                    <th className="py-4 px-6">Invitado</th>
-                    <th className="py-4 px-4">Teléfono</th>
-                    <th className="py-4 px-4">Lugares</th>
-                    <th className="py-4 px-4">Monto Total</th>
-                    <th className="py-4 px-4">Parcial Abonado</th>
-                    <th className="py-4 px-4">Estado</th>
-                    <th className="py-4 px-4 text-center">Detalles</th>
-                    <th className="py-4 px-6 text-right">Acciones Rápidas</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#0B272D]/5">
-                  {filteredList.map((item) => {
-                    const saldo = Math.max(0, (item.montoTotal || 0) - (item.montoPagado || 0));
-                    return (
-                      <tr key={item.id} className="hover:bg-[#F9FBFA] transition-colors">
-                        {/* Name */}
-                        <td className="py-4 px-6">
-                          <div className="font-bold text-[#0B272D]">
+            <div>
+              {/* DESKTOP VIEW: FULL TABLE */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F7FAF9] border-b border-[#0B272D]/10 text-gray-500 uppercase font-bold text-[10px] tracking-wider">
+                    <tr>
+                      <th className="py-4 px-6">Invitado</th>
+                      <th className="py-4 px-4">Teléfono</th>
+                      <th className="py-4 px-4">Lugares</th>
+                      <th className="py-4 px-4">Monto Total</th>
+                      <th className="py-4 px-4">Parcial Abonado</th>
+                      <th className="py-4 px-4">Estado</th>
+                      <th className="py-4 px-4 text-center">Detalles</th>
+                      <th className="py-4 px-6 text-right">Acciones Rápidas</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#0B272D]/5">
+                    {filteredList.map((item) => {
+                      const saldo = Math.max(0, (item.montoTotal || 0) - (item.montoPagado || 0));
+                      return (
+                        <tr key={item.id} className="hover:bg-[#F9FBFA] transition-colors">
+                          {/* Name */}
+                          <td className="py-4 px-6">
+                            <div className="font-bold text-[#0B272D]">
+                              {item.nombre} {item.apellido}
+                            </div>
+                            {item.restriccionAlimentaria && item.restriccionAlimentaria !== 'ninguno' && (
+                              <span className="text-[10px] text-[#5A9696] font-medium block">
+                                Dieta: {item.restriccionAlimentaria}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Phone */}
+                          <td className="py-4 px-4 font-mono text-[#0B272D]">
+                            <a
+                              href={`https://api.whatsapp.com/send?phone=549${item.telefono}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="hover:underline text-[#5A9696] font-semibold flex items-center gap-1"
+                            >
+                              <span>💬</span>
+                              <span>{item.telefono}</span>
+                            </a>
+                          </td>
+
+                          {/* Guest count */}
+                          <td className="py-4 px-4">
+                            {item.asistencia === 'attending' ? (
+                              <span className="font-bold text-[#0B272D]">
+                                {item.invitados} {item.invitados > 1 ? 'personas' : 'persona'}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 italic">No asiste</span>
+                            )}
+                          </td>
+
+                          {/* Total amount */}
+                          <td className="py-4 px-4 font-bold text-[#0B272D]">
+                            {item.montoTotal ? `$${item.montoTotal.toLocaleString('es-AR')}` : '-'}
+                          </td>
+
+                          {/* Parcial amount */}
+                          <td className="py-4 px-4 font-bold">
+                            {item.asistencia === 'declined' ? (
+                              <span className="text-gray-400">-</span>
+                            ) : item.montoPagado && item.montoPagado > 0 ? (
+                              <div>
+                                <span className="text-[#3E7B27]">${item.montoPagado.toLocaleString('es-AR')}</span>
+                                {saldo > 0 && (
+                                  <span className="text-[10px] text-gray-400 block font-normal">
+                                    Resta: ${saldo.toLocaleString('es-AR')}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 font-normal">$0</span>
+                            )}
+                          </td>
+
+                          {/* Payment status badge */}
+                          <td className="py-4 px-4">
+                            {item.asistencia === 'declined' ? (
+                              <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-[10px] font-bold">
+                                No Aplica
+                              </span>
+                            ) : item.estadoPago === 'aprobado' ? (
+                              <span className="bg-[#BBDB93] text-[#0B272D] px-2.5 py-1 rounded-full text-[10px] font-bold">
+                                ✓ Aprobado
+                              </span>
+                            ) : item.estadoPago === 'parcialmente_pagado' ? (
+                              <span className="bg-[#E6F0FA] text-[#1E56A0] px-2.5 py-1 rounded-full text-[10px] font-bold">
+                                💳 Parcial
+                              </span>
+                            ) : item.estadoPago === 'en_revision' ? (
+                              <span className="bg-[#E0E8E5] text-[#0B272D] px-2.5 py-1 rounded-full text-[10px] font-bold">
+                                ⏳ En Revisión
+                              </span>
+                            ) : (
+                              <span className="bg-[#FAF0E6] text-[#8C5A00] px-2.5 py-1 rounded-full text-[10px] font-bold">
+                                ⚠️ Pendiente
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Details button */}
+                          <td className="py-4 px-4 text-center">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedInvitadoForDetails(item)}
+                              className="px-3 py-1.5 bg-[#F0F4F2] hover:bg-[#BBDB93] text-[#0B272D] rounded-xl font-bold text-xs transition-colors shadow-sm inline-flex items-center gap-1 border border-[#0B272D]/10"
+                            >
+                              <span>🔍</span>
+                              <span>Detalles</span>
+                            </button>
+                          </td>
+
+                          {/* Action buttons */}
+                          <td className="py-4 px-6 text-right space-x-1.5">
+                            {item.asistencia === 'attending' && item.estadoPago !== 'aprobado' && (
+                              <button
+                                onClick={() => handleStatusChange(item.id, 'aprobado')}
+                                disabled={actionLoading === item.id}
+                                className="px-2.5 py-1 bg-[#BBDB93] hover:bg-[#A3C775] text-[#0B272D] rounded-lg font-bold text-[10px] transition-colors"
+                                title="Aprobar pago"
+                              >
+                                ✓ Aprobar
+                              </button>
+                            )}
+                            {item.asistencia === 'attending' && item.estadoPago === 'aprobado' && (
+                              <button
+                                onClick={() => handleStatusChange(item.id, 'pendiente')}
+                                disabled={actionLoading === item.id}
+                                className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-bold text-[10px] transition-colors"
+                                title="Marcar como pendiente"
+                              >
+                                Deshacer
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(item.id, `${item.nombre} ${item.apellido}`)}
+                              disabled={actionLoading === item.id}
+                              className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg font-bold text-[10px] transition-colors"
+                              title="Eliminar invitado"
+                            >
+                              ✕
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE VIEW: RESPONSIVE CARDS */}
+              <div className="md:hidden p-4 space-y-3 divide-y divide-[#0B272D]/5">
+                {filteredList.map((item) => {
+                  const saldo = Math.max(0, (item.montoTotal || 0) - (item.montoPagado || 0));
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-[#F7FAF9] rounded-2xl p-4 border border-[#0B272D]/10 space-y-3 shadow-sm pt-4"
+                    >
+                      {/* Card Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-bold text-sm text-[#0B272D]">
                             {item.nombre} {item.apellido}
-                          </div>
+                          </h3>
                           {item.restriccionAlimentaria && item.restriccionAlimentaria !== 'ninguno' && (
-                            <span className="text-[10px] text-[#5A9696] font-medium block">
-                              Dieta: {item.restriccionAlimentaria}
+                            <span className="text-[10px] text-[#5A9696] font-medium block mt-0.5">
+                              🌿 Dieta: {item.restriccionAlimentaria}
                             </span>
                           )}
-                        </td>
+                        </div>
 
-                        {/* Phone */}
-                        <td className="py-4 px-4 font-mono text-[#0B272D]">
+                        {/* Status badge */}
+                        <div className="shrink-0">
+                          {item.asistencia === 'declined' ? (
+                            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                              No Aplica
+                            </span>
+                          ) : item.estadoPago === 'aprobado' ? (
+                            <span className="bg-[#BBDB93] text-[#0B272D] px-2 py-0.5 rounded-full text-[10px] font-bold">
+                              ✓ Aprobado
+                            </span>
+                          ) : item.estadoPago === 'parcialmente_pagado' ? (
+                            <span className="bg-[#E6F0FA] text-[#1E56A0] px-2 py-0.5 rounded-full text-[10px] font-bold">
+                              💳 Parcial
+                            </span>
+                          ) : item.estadoPago === 'en_revision' ? (
+                            <span className="bg-[#E0E8E5] text-[#0B272D] px-2 py-0.5 rounded-full text-[10px] font-bold">
+                              ⏳ En Revisión
+                            </span>
+                          ) : (
+                            <span className="bg-[#FAF0E6] text-[#8C5A00] px-2 py-0.5 rounded-full text-[10px] font-bold">
+                              ⚠️ Pendiente
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Info Grid */}
+                      <div className="grid grid-cols-2 gap-2 text-xs bg-white p-3 rounded-xl border border-[#0B272D]/5">
+                        <div>
+                          <span className="text-[10px] text-gray-400 block font-semibold uppercase">Teléfono</span>
                           <a
                             href={`https://api.whatsapp.com/send?phone=549${item.telefono}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="hover:underline text-[#5A9696] font-semibold flex items-center gap-1"
+                            className="font-mono text-[#5A9696] font-bold hover:underline inline-flex items-center gap-1 mt-0.5"
                           >
                             <span>💬</span>
                             <span>{item.telefono}</span>
                           </a>
-                        </td>
+                        </div>
 
-                        {/* Guest count */}
-                        <td className="py-4 px-4">
-                          {item.asistencia === 'attending' ? (
-                            <span className="font-bold text-[#0B272D]">
-                              {item.invitados} {item.invitados > 1 ? 'personas' : 'persona'}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400 italic">No asiste</span>
-                          )}
-                        </td>
+                        <div>
+                          <span className="text-[10px] text-gray-400 block font-semibold uppercase">Lugares</span>
+                          <span className="font-bold text-[#0B272D] block mt-0.5">
+                            {item.asistencia === 'attending' ? `${item.invitados} pers.` : 'No asiste'}
+                          </span>
+                        </div>
 
-                        {/* Total amount */}
-                        <td className="py-4 px-4 font-bold text-[#0B272D]">
-                          {item.montoTotal ? `$${item.montoTotal.toLocaleString('es-AR')}` : '-'}
-                        </td>
+                        <div className="pt-2 border-t border-gray-100">
+                          <span className="text-[10px] text-gray-400 block font-semibold uppercase">Monto Total</span>
+                          <span className="font-bold text-[#0B272D] block mt-0.5">
+                            {item.montoTotal ? `$${item.montoTotal.toLocaleString('es-AR')}` : '-'}
+                          </span>
+                        </div>
 
-                        {/* Parcial amount */}
-                        <td className="py-4 px-4 font-bold">
-                          {item.asistencia === 'declined' ? (
-                            <span className="text-gray-400">-</span>
-                          ) : item.montoPagado && item.montoPagado > 0 ? (
+                        <div className="pt-2 border-t border-gray-100">
+                          <span className="text-[10px] text-gray-400 block font-semibold uppercase">Abonado</span>
+                          {item.montoPagado && item.montoPagado > 0 ? (
                             <div>
-                              <span className="text-[#3E7B27]">${item.montoPagado.toLocaleString('es-AR')}</span>
+                              <span className="font-bold text-[#3E7B27] block mt-0.5">
+                                ${item.montoPagado.toLocaleString('es-AR')}
+                              </span>
                               {saldo > 0 && (
-                                <span className="text-[10px] text-gray-400 block font-normal">
+                                <span className="text-[9px] text-gray-400 block">
                                   Resta: ${saldo.toLocaleString('es-AR')}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-gray-400 font-normal">$0</span>
+                            <span className="text-gray-400 font-normal block mt-0.5">$0</span>
                           )}
-                        </td>
+                        </div>
+                      </div>
 
-                        {/* Payment status badge */}
-                        <td className="py-4 px-4">
-                          {item.asistencia === 'declined' ? (
-                            <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-[10px] font-bold">
-                              No Aplica
-                            </span>
-                          ) : item.estadoPago === 'aprobado' ? (
-                            <span className="bg-[#BBDB93] text-[#0B272D] px-2.5 py-1 rounded-full text-[10px] font-bold">
-                              ✓ Aprobado
-                            </span>
-                          ) : item.estadoPago === 'parcialmente_pagado' ? (
-                            <span className="bg-[#E6F0FA] text-[#1E56A0] px-2.5 py-1 rounded-full text-[10px] font-bold">
-                              💳 Parcial
-                            </span>
-                          ) : item.estadoPago === 'en_revision' ? (
-                            <span className="bg-[#E0E8E5] text-[#0B272D] px-2.5 py-1 rounded-full text-[10px] font-bold">
-                              ⏳ En Revisión
-                            </span>
-                          ) : (
-                            <span className="bg-[#FAF0E6] text-[#8C5A00] px-2.5 py-1 rounded-full text-[10px] font-bold">
-                              ⚠️ Pendiente
-                            </span>
-                          )}
-                        </td>
+                      {/* Card Actions */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedInvitadoForDetails(item)}
+                          className="flex-1 py-2 bg-white hover:bg-[#BBDB93] border border-[#0B272D]/15 rounded-xl font-bold text-xs text-[#0B272D] transition-colors shadow-sm flex items-center justify-center gap-1.5"
+                        >
+                          <span>🔍</span>
+                          <span>Ver Ficha Completa</span>
+                        </button>
 
-                        {/* Details button */}
-                        <td className="py-4 px-4 text-center">
+                        {item.asistencia === 'attending' && item.estadoPago !== 'aprobado' && (
                           <button
-                            type="button"
-                            onClick={() => setSelectedInvitadoForDetails(item)}
-                            className="px-3 py-1.5 bg-[#F0F4F2] hover:bg-[#BBDB93] text-[#0B272D] rounded-xl font-bold text-xs transition-colors shadow-sm inline-flex items-center gap-1 border border-[#0B272D]/10"
-                          >
-                            <span>🔍</span>
-                            <span>Detalles</span>
-                          </button>
-                        </td>
-
-                        {/* Action buttons */}
-                        <td className="py-4 px-6 text-right space-x-1.5">
-                          {item.asistencia === 'attending' && item.estadoPago !== 'aprobado' && (
-                            <button
-                              onClick={() => handleStatusChange(item.id, 'aprobado')}
-                              disabled={actionLoading === item.id}
-                              className="px-2.5 py-1 bg-[#BBDB93] hover:bg-[#A3C775] text-[#0B272D] rounded-lg font-bold text-[10px] transition-colors"
-                              title="Aprobar pago"
-                            >
-                              ✓ Aprobar
-                            </button>
-                          )}
-                          {item.asistencia === 'attending' && item.estadoPago === 'aprobado' && (
-                            <button
-                              onClick={() => handleStatusChange(item.id, 'pendiente')}
-                              disabled={actionLoading === item.id}
-                              className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-bold text-[10px] transition-colors"
-                              title="Marcar como pendiente"
-                            >
-                              Deshacer
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDelete(item.id, `${item.nombre} ${item.apellido}`)}
+                            onClick={() => handleStatusChange(item.id, 'aprobado')}
                             disabled={actionLoading === item.id}
-                            className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg font-bold text-[10px] transition-colors"
-                            title="Eliminar invitado"
+                            className="px-3 py-2 bg-[#BBDB93] hover:bg-[#A3C775] text-[#0B272D] rounded-xl font-bold text-xs transition-colors shadow-sm"
+                            title="Aprobar pago"
                           >
-                            ✕
+                            ✓ Aprobar
                           </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        )}
+
+                        {item.asistencia === 'attending' && item.estadoPago === 'aprobado' && (
+                          <button
+                            onClick={() => handleStatusChange(item.id, 'pendiente')}
+                            disabled={actionLoading === item.id}
+                            className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold text-xs transition-colors"
+                            title="Marcar como pendiente"
+                          >
+                            Deshacer
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => handleDelete(item.id, `${item.nombre} ${item.apellido}`)}
+                          disabled={actionLoading === item.id}
+                          className="px-2.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl font-bold text-xs transition-colors"
+                          title="Eliminar invitado"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

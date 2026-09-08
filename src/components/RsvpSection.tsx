@@ -43,6 +43,8 @@ export const RsvpSection: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [savedInvitado, setSavedInvitado] = useState<Invitado | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [openBank, setOpenBank] = useState<'nacion' | 'santander' | null>('nacion');
 
 
   // Price per person
@@ -50,6 +52,11 @@ export const RsvpSection: React.FC = () => {
   const totalAmount = guestCount * pricePerPerson;
 
   // Bank Data
+  const handleCopy = (text: string, fieldName: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
 
   // File size formatter
@@ -262,7 +269,7 @@ export const RsvpSection: React.FC = () => {
               to="/pago"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5A9696] hover:text-[#0B272D] underline tracking-wide transition-colors"
             >
-              <span>📄 ¿Ya confirmaste tu asistencia y querés subir o consultar tu comprobante? Hacé clic acá →</span>
+              <span>¿Ya confirmaste? Subí o consulta tu comprobante → Hacé clic acá</span>
             </Link>
           </div>
         </div>
@@ -630,8 +637,121 @@ export const RsvpSection: React.FC = () => {
 
                       {/* OPTION: PAY NOW -> SHOW BANK DETAILS & DROPZONE */}
                       {paymentOption === 'ahora' && (
-                        <div className="space-y-4 pt-2 animate-fade-in">
+                        <div className=" grid grid-cols-1  gap-4">
 
+                          {/* Bank Details Accordion Card */}
+                          <div className="bg-[#FAFDF9] rounded-2xl p-4 sm:p-5 border border-[#BBDB93]/60 space-y-3 text-xs">
+                            <div className="flex items-center justify-between pb-2 border-b border-[#0B272D]/10">
+                              <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                <span>🏦</span>
+                                <span>Datos Bancarios para Transferencia</span>
+                              </h3>
+                              <span className="text-[10px] text-[#5A9696] font-semibold">2 Cuentas</span>
+                            </div>
+
+                            {/* Acordeon Desplegable */}
+                            <div className="space-y-2">
+
+                              {/* Acordeon 1: Banco Nación */}
+                              <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenBank(openBank === 'nacion' ? null : 'nacion')}
+                                  className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="w-7 h-7 rounded-lg bg-[#D6E4BA] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
+                                      🏛️
+                                    </span>
+                                    <div>
+                                      <p className="font-bold text-xs text-[#0B272D]">Banco Nación</p>
+                                      <p className="text-[10px] text-gray-500">Mariana Pickenhayn</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
+                                      {openBank === 'nacion' ? 'Ocultar' : 'Ver datos'}
+                                    </span>
+                                    <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'nacion' ? 'rotate-180' : ''}`}>
+                                      ▼
+                                    </span>
+                                  </div>
+                                </button>
+
+                                {openBank === 'nacion' && (
+                                  <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
+                                    <div className="flex justify-between items-center text-[11px] text-gray-600">
+                                      <span>Titular:</span>
+                                      <span className="font-bold text-[#0B272D]">Mariana Pickenhayn</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
+                                      <div>
+                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
+                                        <span className="font-mono font-bold text-[#0B272D] text-xs">mariana.pick</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopy('mariana.pick', 'alias1')}
+                                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
+                                      >
+                                        {copiedField === 'alias1' ? '✓ ¡Copiado!' : 'Copiar Alias'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Acordeon 2: Banco Santander */}
+                              <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenBank(openBank === 'santander' ? null : 'santander')}
+                                  className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="w-7 h-7 rounded-lg bg-[#E0E8E5] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
+                                      🏛️
+                                    </span>
+                                    <div>
+                                      <p className="font-bold text-xs text-[#0B272D]">Banco Santander</p>
+                                      <p className="text-[10px] text-gray-500">Camila Peroni Pickenhayn</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
+                                      {openBank === 'santander' ? 'Ocultar' : 'Ver datos'}
+                                    </span>
+                                    <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'santander' ? 'rotate-180' : ''}`}>
+                                      ▼
+                                    </span>
+                                  </div>
+                                </button>
+
+                                {openBank === 'santander' && (
+                                  <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
+                                    <div className="flex justify-between items-center text-[11px] text-gray-600">
+                                      <span>Titular:</span>
+                                      <span className="font-bold text-[#0B272D]">Camila Peroni Pickenhayn</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
+                                      <div>
+                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
+                                        <span className="font-mono font-bold text-[#0B272D] text-xs">camilapickenhayn</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopy('camilapickenhayn', 'alias2')}
+                                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
+                                      >
+                                        {copiedField === 'alias2' ? '✓ ¡Copiado!' : 'Copiar Alias'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                            </div>
+                          </div>
 
                           {/* File Upload Dropzone */}
                           <div>
@@ -748,6 +868,120 @@ export const RsvpSection: React.FC = () => {
                             />
                           </div>
 
+
+                          {/* Bank Details Accordion Card */}
+                          <div className="bg-[#FAFDF9] rounded-2xl p-4 sm:p-5 border border-[#BBDB93]/60 space-y-3 text-xs">
+                            <div className="flex items-center justify-between pb-2 border-b border-[#0B272D]/10">
+                              <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                <span>🏦</span>
+                                <span>Datos Bancarios para Transferencia</span>
+                              </h3>
+                              <span className="text-[10px] text-[#5A9696] font-semibold">2 Cuentas</span>
+                            </div>
+
+                            {/* Acordeon Desplegable */}
+                            <div className="space-y-2">
+
+                              {/* Acordeon 1: Banco Nación */}
+                              <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenBank(openBank === 'nacion' ? null : 'nacion')}
+                                  className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="w-7 h-7 rounded-lg bg-[#D6E4BA] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
+                                      🏛️
+                                    </span>
+                                    <div>
+                                      <p className="font-bold text-xs text-[#0B272D]">Banco Nación</p>
+                                      <p className="text-[10px] text-gray-500">Mariana Pickenhayn</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
+                                      {openBank === 'nacion' ? 'Ocultar' : 'Ver datos'}
+                                    </span>
+                                    <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'nacion' ? 'rotate-180' : ''}`}>
+                                      ▼
+                                    </span>
+                                  </div>
+                                </button>
+
+                                {openBank === 'nacion' && (
+                                  <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
+                                    <div className="flex justify-between items-center text-[11px] text-gray-600">
+                                      <span>Titular:</span>
+                                      <span className="font-bold text-[#0B272D]">Mariana Pickenhayn</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
+                                      <div>
+                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
+                                        <span className="font-mono font-bold text-[#0B272D] text-xs">mariana.pick</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopy('mariana.pick', 'alias1')}
+                                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
+                                      >
+                                        {copiedField === 'alias1' ? '✓ ¡Copiado!' : 'Copiar Alias'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Acordeon 2: Banco Santander */}
+                              <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenBank(openBank === 'santander' ? null : 'santander')}
+                                  className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="w-7 h-7 rounded-lg bg-[#E0E8E5] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
+                                      🏛️
+                                    </span>
+                                    <div>
+                                      <p className="font-bold text-xs text-[#0B272D]">Banco Santander</p>
+                                      <p className="text-[10px] text-gray-500">Camila Peroni Pickenhayn</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
+                                      {openBank === 'santander' ? 'Ocultar' : 'Ver datos'}
+                                    </span>
+                                    <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'santander' ? 'rotate-180' : ''}`}>
+                                      ▼
+                                    </span>
+                                  </div>
+                                </button>
+
+                                {openBank === 'santander' && (
+                                  <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
+                                    <div className="flex justify-between items-center text-[11px] text-gray-600">
+                                      <span>Titular:</span>
+                                      <span className="font-bold text-[#0B272D]">Camila Peroni Pickenhayn</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
+                                      <div>
+                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
+                                        <span className="font-mono font-bold text-[#0B272D] text-xs">camilapickenhayn</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopy('camilapickenhayn', 'alias2')}
+                                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
+                                      >
+                                        {copiedField === 'alias2' ? '✓ ¡Copiado!' : 'Copiar Alias'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                            </div>
+                          </div>
 
                           {/* File Upload Dropzone */}
                           <div>

@@ -161,11 +161,11 @@ export const Navbar: React.FC = () => {
           ))}
 
           <Link
-            to="/pago"
+            to="/login"
             onClick={() => setMobileMenuOpen(false)}
             className="block text-sm tracking-wider uppercase font-semibold text-[#E0E8E5] hover:text-[#BBDB93]"
           >
-            📄 Subir Comprobante
+            Ingresar
           </Link>
 
           <a
@@ -175,6 +175,14 @@ export const Navbar: React.FC = () => {
           >
             CONFIRMAR ASISTENCIA
           </a>
+          <Link
+            to="/pago"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-center bg-[#BBDB93]/20 text-[#FFFFFF] text-xs font-bold tracking-widest uppercase py-3 rounded-full shadow-md"
+          >
+            ¿Ya confirmaste? - Subí el Comprobante
+          </Link>
+
         </div>
       )}
     </header>

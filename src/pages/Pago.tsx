@@ -39,6 +39,7 @@ export const Pago: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [openBank, setOpenBank] = useState<'nacion' | 'santander' | null>('nacion');
 
   // Format file size
   const formatFileSize = (bytes: number): string => {
@@ -416,7 +417,7 @@ export const Pago: React.FC = () => {
               )}
 
               {/* SUMMARY GRID & FINANCIAL DETAILS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1  gap-4">
 
                 {/* Left: Summary Details Card */}
                 <div className="bg-[#F7FAF9] rounded-2xl p-5 border border-[#0B272D]/10 space-y-3 text-xs">
@@ -458,48 +459,117 @@ export const Pago: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right: Bank Details Card */}
-                <div className="bg-[#FAFDF9] rounded-2xl p-5 border border-[#BBDB93]/60 space-y-3 text-xs">
-                  <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] pb-2 border-b border-[#0B272D]/10 flex items-center justify-between">
-                    <span>Datos Bancarios para Transferencia</span>
-                    <span>🏦</span>
-                  </h3>
+                {/* Right: Bank Details Accordion Card */}
+                <div className="bg-[#FAFDF9] rounded-2xl p-4 sm:p-5 border border-[#BBDB93]/60 space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#0B272D]/10">
+                    <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                      <span>🏦</span>
+                      <span>Datos Bancarios para Transferencia</span>
+                    </h3>
+                    <span className="text-[10px] text-[#5A9696] font-semibold">2 Cuentas</span>
+                  </div>
 
+                  {/* Acordeon Desplegable */}
                   <div className="space-y-2">
-                    <div>
-                      <span className="text-[10px] text-gray-500 block uppercase font-semibold">Banco</span>
-                      <span className="font-bold text-[#0B272D]">Banco Santander</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-gray-500 block uppercase font-semibold">Titular</span>
-                      <span className="font-bold text-[#0B272D]">Mariana & Carlos</span>
-                    </div>
-                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
-                      <div>
-                        <span className="text-[10px] text-gray-500 block uppercase font-semibold">Alias</span>
-                        <span className="font-mono font-bold text-[#0B272D]">boda.mariana.carlos</span>
-                      </div>
+
+                    {/* Acordeon 1: Banco Nación */}
+                    <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
                       <button
                         type="button"
-                        onClick={() => handleCopy('boda.mariana.carlos', 'alias')}
-                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] underline"
+                        onClick={() => setOpenBank(openBank === 'nacion' ? null : 'nacion')}
+                        className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
                       >
-                        {copiedField === 'alias' ? '¡Copiado!' : 'Copiar'}
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-7 h-7 rounded-lg bg-[#D6E4BA] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
+                            🏛️
+                          </span>
+                          <div>
+                            <p className="font-bold text-xs text-[#0B272D]">Banco Nación</p>
+                            <p className="text-[10px] text-gray-500">Mariana Pickenhayn</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
+                            {openBank === 'nacion' ? 'Ocultar' : 'Ver datos'}
+                          </span>
+                          <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'nacion' ? 'rotate-180' : ''}`}>
+                            ▼
+                          </span>
+                        </div>
                       </button>
+
+                      {openBank === 'nacion' && (
+                        <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
+                          <div className="flex justify-between items-center text-[11px] text-gray-600">
+                            <span>Titular:</span>
+                            <span className="font-bold text-[#0B272D]">Mariana Pickenhayn</span>
+                          </div>
+                          <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
+                            <div>
+                              <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
+                              <span className="font-mono font-bold text-[#0B272D] text-xs">mariana.pick</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy('mariana.pick', 'alias1')}
+                              className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
+                            >
+                              {copiedField === 'alias1' ? '✓ ¡Copiado!' : 'Copiar Alias'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
-                      <div>
-                        <span className="text-[10px] text-gray-500 block uppercase font-semibold">CBU</span>
-                        <span className="font-mono font-bold text-[#0B272D] text-[11px]">0720123488000012345678</span>
-                      </div>
+
+                    {/* Acordeon 2: Banco Santander */}
+                    <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
                       <button
                         type="button"
-                        onClick={() => handleCopy('0720123488000012345678', 'cbu')}
-                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] underline"
+                        onClick={() => setOpenBank(openBank === 'santander' ? null : 'santander')}
+                        className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
                       >
-                        {copiedField === 'cbu' ? '¡Copiado!' : 'Copiar'}
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-7 h-7 rounded-lg bg-[#E0E8E5] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
+                            🏛️
+                          </span>
+                          <div>
+                            <p className="font-bold text-xs text-[#0B272D]">Banco Santander</p>
+                            <p className="text-[10px] text-gray-500">Camila Peroni Pickenhayn</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
+                            {openBank === 'santander' ? 'Ocultar' : 'Ver datos'}
+                          </span>
+                          <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'santander' ? 'rotate-180' : ''}`}>
+                            ▼
+                          </span>
+                        </div>
                       </button>
+
+                      {openBank === 'santander' && (
+                        <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
+                          <div className="flex justify-between items-center text-[11px] text-gray-600">
+                            <span>Titular:</span>
+                            <span className="font-bold text-[#0B272D]">Camila Peroni Pickenhayn</span>
+                          </div>
+                          <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
+                            <div>
+                              <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
+                              <span className="font-mono font-bold text-[#0B272D] text-xs">camilapickenhayn</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy('camilapickenhayn', 'alias2')}
+                              className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
+                            >
+                              {copiedField === 'alias2' ? '✓ ¡Copiado!' : 'Copiar Alias'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
+
                   </div>
                 </div>
 
