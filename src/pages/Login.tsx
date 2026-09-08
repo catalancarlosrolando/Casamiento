@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithGoogle } from '../services/authService';
+import { 
+  signInWithGoogle, 
+  signInWithGoogleRedirect, 
+  checkRedirectResult 
+} from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
@@ -8,6 +12,27 @@ const Login = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Comprobar redirección al cargar la página
+  useEffect(() => {
+    const processRedirect = async () => {
+      setLoading(true);
+      try {
+        const res = await checkRedirectResult();
+        if (res.success && res.user) {
+          navigate('/dashboard');
+        } else if (res.error) {
+          setError(res.error);
+        }
+      } catch (err) {
+        console.error('Error procesando redirección:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    processRedirect();
+  }, [navigate]);
 
   // Redirigir si ya está autenticado
   useEffect(() => {
@@ -24,13 +49,18 @@ const Login = () => {
       const result = await signInWithGoogle();
 
       if (result.success) {
-        // Redirigir al dashboard después del login exitoso
         navigate('/dashboard');
       } else {
+        // Si el popup fue cerrado o bloqueado, intentamos redirección directa
+        if (result.code === 'auth/popup-blocked' || result.code === 'auth/popup-closed-by-user') {
+          console.log('Popup no completado, intentando autenticación por redirección...');
+          await signInWithGoogleRedirect();
+          return;
+        }
         setError(result.error || 'Error al iniciar sesión. Por favor, intenta nuevamente.');
       }
-    } catch (err) {
-      setError('Error inesperado. Por favor, intenta nuevamente.');
+    } catch (err: any) {
+      setError(err?.message || 'Error inesperado. Por favor, intenta nuevamente.');
       console.error('Error en login:', err);
     } finally {
       setLoading(false);

@@ -43,11 +43,12 @@ export const SaveTheDateSection: React.FC = () => {
   ];
 
   const handleAddToCalendar = () => {
-    const title = encodeURIComponent("Casamiento de Shweta & Abhinav");
-    const details = encodeURIComponent("¡Reserva la fecha! Te invitamos a celebrar el casamiento de Shweta y Abhinav en Ghaziabad.");
-    const location = encodeURIComponent("Ghaziabad, India");
-    const dates = "20261107T153000Z/20261108T040000Z";
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+    const title = encodeURIComponent("Casamiento de Mariana & Carlos");
+    const details = encodeURIComponent("¡Reserva la fecha! Te invitamos a celebrar el casamiento de Mariana y Carlos.");
+    const location = encodeURIComponent("Salon Complejo Nautico Ullum, San Juan");
+    // 21:00 hs (7 Nov) a 05:00 hs (8 Nov) en Hora Argentina (UTC-3) -> 00:00Z a 08:00Z (8 Nov)
+    const dates = "20261108T000000Z/20261108T080000Z";
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}&ctz=America/Argentina/Buenos_Aires`;
     window.open(url, '_blank');
   };
 

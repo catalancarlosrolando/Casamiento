@@ -5,7 +5,8 @@
  * Solo estos usuarios pueden crear y editar contenido
  */
 export const AUTHORIZED_EMAILS = [
-  import.meta.env.VITE_AUTH_USER, // Reemplaza con tu email real
+  import.meta.env.VITE_AUTH_USER,
+  import.meta.env.VITE_AUTH_USER2, // Reemplaza con tu email real
   // Agrega más emails si es necesario
 ];
 

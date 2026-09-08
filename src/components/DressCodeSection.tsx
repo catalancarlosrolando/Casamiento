@@ -209,7 +209,7 @@ export const DressCodeSection: React.FC = () => {
             Inspiración de Atuendo: Elegante
           </h2>
           <p className="text-[#E0E8E5]/90 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed font-sans">
-            Les compartimos algunas ideas de inspiración para la celebración. Lo más importante para nosotros es que vengan con ganas de disfrutar, festejar y bailar juntos toda la noche.
+            Damas: Evitar tonos champagne/dorados, reservado para la novia.
           </p>
         </div>
 
@@ -304,7 +304,7 @@ export const DressCodeSection: React.FC = () => {
             🌿 Consejo para la Celebración
           </h4>
           <p className="text-[11px] sm:text-xs text-[#E0E8E5]/90 font-normal leading-relaxed font-sans">
-            La recepción y los brindis se desarrollarán en espacios verdes y jardines al aire libre. Sugerimos calzado cómodo con taco ancho o plataformas para bailar y disfrutar sin preocupaciones.
+            La recepción y los brindis se disfrutaran sin preocupaciones.
           </p>
         </div>
 

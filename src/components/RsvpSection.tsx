@@ -24,9 +24,11 @@ export const RsvpSection: React.FC = () => {
   const [dietary, setDietary] = useState<string>('ninguno');
   const [songRequest, setSongRequest] = useState<string>('');
   const [comment, setComment] = useState<string>('');
+  const [otherDietary, setOtherDietary] = useState<string>('');
+  const [amountPartial, setAmountPartial] = useState<number>(0);
 
   // Payment Option State: 'ahora' (Pay now & attach) vs 'tarde' (Pay later & receive unique link)
-  const [paymentOption, setPaymentOption] = useState<'ahora' | 'tarde'>('ahora');
+  const [paymentOption, setPaymentOption] = useState<'ahora' | 'tarde' | 'fraccionado'>('ahora');
 
   // File Upload State
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
@@ -157,7 +159,7 @@ export const RsvpSection: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const fileToUpload = (attendance === 'attending' && paymentOption === 'ahora')
+      const fileToUpload = (attendance === 'attending' && paymentOption === 'ahora' || attendance === 'attending' && paymentOption === 'fraccionado')
         ? attachedFile?.file
         : null;
 
@@ -169,10 +171,12 @@ export const RsvpSection: React.FC = () => {
           asistencia: attendance,
           invitados: guestCount,
           restriccionAlimentaria: dietary,
-          mensaje: comment,
+          otros: otherDietary,
+          observacion: comment,
           cancion: songRequest,
           opcionPago: attendance === 'attending' ? paymentOption : 'no_aplica',
           montoTotal: totalAmount,
+          montoPagado: amountPartial,
           estadoPago: attendance !== 'attending'
             ? 'no_aplica'
             : (fileToUpload ? 'en_revision' : 'pendiente'),
@@ -207,6 +211,8 @@ export const RsvpSection: React.FC = () => {
     setAttachedFile(null);
     setFormError(null);
     setCopiedLink(false);
+    setOtherDietary('');
+    setAmountPartial(0);
   };
 
   const handleCopyLink = () => {
@@ -239,15 +245,14 @@ export const RsvpSection: React.FC = () => {
 
         {/* Section Header */}
         <div className="text-center mb-10">
-          <span className="text-[#5A9696] font-semibold text-xs tracking-[0.25em] uppercase block mb-3">
-            CONFIRMACIÓN & ASISTENCIA
-          </span>
+
           <h2 className="font-serif-display text-4xl sm:text-5xl font-semibold text-[#0B272D] mb-4">
             Confirma tu Asistencia
           </h2>
           <p className="text-[#1D373C] text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Nos encantaría contar con tu presencia. Por favor completa el formulario antes del <strong>5 de Octubre de 2026</strong>.
+            Por favor completa el formulario antes del <strong>5 de Octubre de 2026</strong>.
           </p>
+
 
           {/* Quick link for guests who already RSVP'd */}
           <div className="mt-4">
@@ -376,10 +381,12 @@ export const RsvpSection: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                   <button
                     onClick={() => {
-                      const title = encodeURIComponent("Boda Mariana & Carlos");
-                      const details = encodeURIComponent("Casamiento en Complejo UNSJ, Ullum");
-                      const dates = "20261114T193000Z/20261115T080000Z";
-                      window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`, '_blank');
+                      const title = encodeURIComponent("Casamiento de Mariana & Carlos");
+                      const details = encodeURIComponent("¡Reserva la fecha! Te invitamos a celebrar el casamiento de Mariana y Carlos.");
+                      const location = encodeURIComponent("Complejo UNSJ, Ullum, San Juan, Argentina");
+                      // 21:00 hs (7 Nov) a 05:00 hs (8 Nov) en Hora Argentina (UTC-3) -> 00:00Z a 08:00Z (8 Nov)
+                      const dates = "20261108T000000Z/20261108T080000Z";
+                      window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}&ctz=America/Argentina/Buenos_Aires`, '_blank');
                     }}
                     className="bg-[#0B272D] hover:bg-[#051518] text-white text-xs font-semibold uppercase tracking-wider px-6 py-3.5 rounded-full transition-all"
                   >
@@ -407,6 +414,9 @@ export const RsvpSection: React.FC = () => {
                     <h3 className="font-serif-display text-2xl font-bold text-[#0B272D] mt-2">
                       Formulario de Confirmación
                     </h3>
+                    <p className="text-[#1D373C] text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+                      Tu presencia es nuestro mayor regalo. Con tu tarjeta ya nos estás regalando este hermoso momento.
+                    </p>
                   </div>
                   <span className="text-3xl">🌿</span>
                 </div>
@@ -550,7 +560,7 @@ export const RsvpSection: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* PAYMENT METHOD SELECTION (PAGAR AHORA VS PAGAR MAS TARDE) */}
+                    {/* PAYMENT METHOD SELECTION (PAGAR AHORA VS PAGAR MAS TARDE VS PAGAR FRACCIONADO) */}
                     <div className="bg-[#F5F9F8] rounded-2xl p-5 sm:p-6 border border-[#5A9696]/30 space-y-4">
 
                       <div className="flex items-center justify-between">
@@ -577,7 +587,7 @@ export const RsvpSection: React.FC = () => {
                             {paymentOption === 'ahora' && <span className="text-xs text-[#0B272D] font-bold">✓</span>}
                           </div>
                           <span className="text-[10px] text-gray-500">
-                            Hacer la transferencia y adjuntar el comprobante en este momento.
+                            Adjuntar el comprobante en este momento.
                           </span>
                         </button>
 
@@ -597,6 +607,23 @@ export const RsvpSection: React.FC = () => {
                             Confirmar ahora y recibir un enlace único para adjuntar el comprobante luego.
                           </span>
                         </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setPaymentOption('fraccionado')}
+                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${paymentOption === 'fraccionado'
+                            ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
+                            : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#0B272D]">💳 Pagar Fraccionado</span>
+                            {paymentOption === 'fraccionado' && <span className="text-xs text-[#0B272D] font-bold">✓</span>}
+                          </div>
+                          <span className="text-[10px] text-gray-500">
+                            Realizar el pago en cuotas.
+                          </span>
+                        </button>
                       </div>
 
                       {/* OPTION: PAY NOW -> SHOW BANK DETAILS & DROPZONE */}
@@ -609,6 +636,124 @@ export const RsvpSection: React.FC = () => {
                             <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
                               Adjuntar Comprobante de Pago <span className="text-gray-400 font-normal">(Opcional / Recomendado)</span>
                             </label>
+
+                            {/* Hidden File Input */}
+                            <input
+                              type="file"
+                              ref={fileInputRef}
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files.length > 0) {
+                                  handleFileSelect(e.target.files[0]);
+                                }
+                              }}
+                              accept=".jpg,.jpeg,.png,.webp,.pdf"
+                              className="hidden"
+                            />
+
+                            {/* Dropzone Box */}
+                            {!attachedFile ? (
+                              <div
+                                onClick={() => fileInputRef.current?.click()}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${isDragging
+                                  ? 'border-[#0B272D] bg-[#D6E4BA]/30 scale-[1.02]'
+                                  : 'border-[#5A9696] hover:border-[#0B272D] hover:bg-[#F9FBFA]'
+                                  }`}
+                              >
+                                <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>
+                                <p className="text-xs sm:text-sm font-bold text-[#0B272D] mb-1">
+                                  Arrastra tu archivo aquí o haz clic para explorar
+                                </p>
+                                <p className="text-[11px] text-[#5A9696]">
+                                  Formatos permitidos: JPG, PNG, WEBP, PDF · Máximo 5 MB
+                                </p>
+
+                                <button
+                                  type="button"
+                                  className="mt-3 inline-block text-[11px] font-semibold text-[#5A9696] bg-white border border-[#5A9696] px-4 py-1.5 rounded-full hover:bg-[#5A9696] hover:text-white transition-colors"
+                                >
+                                  Seleccionar archivo
+                                </button>
+                              </div>
+                            ) : (
+                              /* Live Preview Chip */
+                              <div className="bg-white rounded-xl p-3.5 border border-[#5A9696]/40 flex items-center justify-between shadow-sm animate-fade-in">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                  {attachedFile.previewUrl ? (
+                                    <img
+                                      src={attachedFile.previewUrl}
+                                      alt="Preview"
+                                      className="w-10 h-10 object-cover rounded-lg border border-[#0B272D]/10 shrink-0"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-lg bg-[#E0E8E5] flex items-center justify-center text-xl shrink-0">
+                                      📄
+                                    </div>
+                                  )}
+                                  <div className="truncate">
+                                    <p className="text-xs font-bold text-[#0B272D] truncate">
+                                      {attachedFile.name}
+                                    </p>
+                                    <p className="text-[10px] text-[#5A9696]">
+                                      {attachedFile.sizeFormatted} · <span className="text-[#426B6B] font-semibold">Listo para enviar</span>
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="bg-[#BBDB93] text-[#0B272D] text-[9px] font-bold px-2.5 py-1 rounded-full">
+                                    ✓ Adjuntado
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={handleClearFile}
+                                    className="w-7 h-7 rounded-full bg-[#FAF0F0] text-[#8C1C00] hover:bg-[#8C1C00] hover:text-white flex items-center justify-center text-xs font-bold transition-colors"
+                                    title="Eliminar archivo"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {fileError && (
+                              <p className="text-xs text-[#8C1C00] font-semibold mt-2">
+                                ⚠️ {fileError}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* OPTION: PAY IN PARTIAL -> SHOW BANK DETAILS & DROPZONE */}
+                      {paymentOption === 'fraccionado' && (
+                        <div className="space-y-4 pt-2 animate-fade-in">
+
+                          {/* Amount Partial */}
+                          <div>
+                            <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                              Monto Parcial
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="Monto"
+                              value={amountPartial === 0 ? '' : amountPartial}
+                              onChange={(e) => setAmountPartial(e.target.value ? Number(e.target.value) : 0)}
+                              className="w-full h-12 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] focus:border-[#5A9696] transition-all"
+                            />
+                          </div>
+
+
+                          {/* File Upload Dropzone */}
+                          <div>
+                            <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                              Adjuntar Comprobante de Pago <span className="text-gray-400 font-normal">(Opcional / Recomendado)</span>
+                            </label>
+
+
 
                             {/* Hidden File Input */}
                             <input
@@ -727,18 +872,34 @@ export const RsvpSection: React.FC = () => {
                         <option value="ninguno">Ninguna restricción (Menú tradicional)</option>
                         <option value="vegetariano">Menú Vegetariano</option>
                         <option value="celiaco">Menú Celíaco / Sin TACC</option>
+                        <option value="otros">Otros</option>
                       </select>
                     </div>
+
+                    {dietary === 'otros' && (
+                      <div>
+                        <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                          Especifique sus restricciones alimentarias
+                        </label>
+                        <input
+                          type="text"
+                          value={otherDietary}
+                          onChange={(e) => setOtherDietary(e.target.value)}
+                          className="w-full h-12 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
+                        />
+                      </div>
+                    )}
+
 
                     {/* Comment */}
                     <div>
                       <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                        ¿Algún mensaje para los novios?
+                        Observaciones
                       </label>
                       <textarea
                         rows={2}
                         value={comment}
-                        placeholder="Escribe un mensaje de cariño o deseos..."
+                        placeholder="Agrega personas o comentarios adicionales..."
                         onChange={(e) => setComment(e.target.value)}
                         className="w-full p-3 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
                       />
@@ -799,107 +960,109 @@ export const RsvpSection: React.FC = () => {
       </div>
 
       {/* POPUP MODAL: DUPLICATE PHONE DETECTED */}
-      {duplicateGuest && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
-          onClick={() => setDuplicateGuest(null)}
-        >
+      {
+        duplicateGuest && (
           <div
-            className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#0B272D]/15 text-center relative space-y-6 transform transition-all animate-scaleUp"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+            onClick={() => setDuplicateGuest(null)}
           >
-            {/* Close button top right */}
-            <button
-              type="button"
-              onClick={() => setDuplicateGuest(null)}
-              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center text-base font-bold transition-colors"
-              aria-label="Cerrar ventana"
+            <div
+              className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#0B272D]/15 text-center relative space-y-6 transform transition-all animate-scaleUp"
+              onClick={(e) => e.stopPropagation()}
             >
-              ✕
-            </button>
-
-            {/* Icon badge */}
-            <div className="w-16 h-16 rounded-full bg-[#FAF0E6] border-2 border-[#D4A373]/50 text-[#8C5A00] text-3xl flex items-center justify-center mx-auto shadow-sm">
-              📋
-            </div>
-
-            {/* Title & Description */}
-            <div className="space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-[#5A9696]">
-                Confirmación Ya Registrada
-              </span>
-              <h3 className="text-2xl font-serif-display font-bold text-[#0B272D]">
-                ¡Este teléfono ya confirmó asistencia!
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
-                Ya encontramos un registro en el sistema con el número{' '}
-                <strong className="font-mono text-[#0B272D] font-bold bg-[#E0E8E5]/70 px-1.5 py-0.5 rounded">
-                  {duplicateGuest.telefono}
-                </strong>. No es necesario volver a completar el formulario.
-              </p>
-            </div>
-
-            {/* Summary card */}
-            <div className="bg-[#F5F9F8] border border-[#5A9696]/30 rounded-2xl p-4 text-left space-y-2.5">
-              <div className="flex justify-between items-center pb-2 border-b border-[#0B272D]/10">
-                <span className="text-xs text-gray-500 font-medium">Titular:</span>
-                <span className="text-sm font-bold text-[#0B272D]">
-                  {duplicateGuest.nombre} {duplicateGuest.apellido}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pb-2 border-b border-[#0B272D]/10">
-                <span className="text-xs text-gray-500 font-medium">Asistencia:</span>
-                <span className="text-xs font-semibold text-[#0B272D]">
-                  {duplicateGuest.asistencia === 'attending'
-                    ? `✓ Sí asiste (${duplicateGuest.invitados} ${duplicateGuest.invitados > 1 ? 'personas' : 'persona'})`
-                    : '✗ No asiste'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500 font-medium">Estado del Pago:</span>
-                <div>
-                  {duplicateGuest.estadoPago === 'aprobado' ? (
-                    <span className="bg-[#EBF7EE] text-[#1B6E32] font-bold px-2.5 py-0.5 rounded-full text-xs">
-                      ✓ Pago Aprobado
-                    </span>
-                  ) : duplicateGuest.estadoPago === 'en_revision' ? (
-                    <span className="bg-[#EBF5FB] text-[#1D6F93] font-bold px-2.5 py-0.5 rounded-full text-xs">
-                      🔍 En Revisión
-                    </span>
-                  ) : duplicateGuest.estadoPago === 'no_aplica' ? (
-                    <span className="bg-gray-100 text-gray-600 font-bold px-2.5 py-0.5 rounded-full text-xs">
-                      No aplica
-                    </span>
-                  ) : (
-                    <span className="bg-[#FAF0E6] text-[#8C5A00] font-bold px-2.5 py-0.5 rounded-full text-xs">
-                      ⏳ Pendiente de Pago
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Link
-                to={`/pago?id=${duplicateGuest.id}`}
-                className="flex-1 py-3.5 px-4 bg-[#0B272D] hover:bg-[#051518] text-white text-xs sm:text-sm font-bold rounded-xl transition-all text-center flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-                onClick={() => setDuplicateGuest(null)}
-              >
-                <span>💳</span>
-                <span>Ver mi reserva o subir comprobante →</span>
-              </Link>
+              {/* Close button top right */}
               <button
                 type="button"
                 onClick={() => setDuplicateGuest(null)}
-                className="py-3.5 px-5 bg-[#E0E8E5] hover:bg-[#D6E4BA] text-[#0B272D] text-xs sm:text-sm font-bold rounded-xl transition-all"
+                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center text-base font-bold transition-colors"
+                aria-label="Cerrar ventana"
               >
-                Cerrar
+                ✕
               </button>
+
+              {/* Icon badge */}
+              <div className="w-16 h-16 rounded-full bg-[#FAF0E6] border-2 border-[#D4A373]/50 text-[#8C5A00] text-3xl flex items-center justify-center mx-auto shadow-sm">
+                📋
+              </div>
+
+              {/* Title & Description */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-[#5A9696]">
+                  Confirmación Ya Registrada
+                </span>
+                <h3 className="text-2xl font-serif-display font-bold text-[#0B272D]">
+                  ¡Este teléfono ya confirmó asistencia!
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
+                  Ya encontramos un registro en el sistema con el número{' '}
+                  <strong className="font-mono text-[#0B272D] font-bold bg-[#E0E8E5]/70 px-1.5 py-0.5 rounded">
+                    {duplicateGuest.telefono}
+                  </strong>. No es necesario volver a completar el formulario.
+                </p>
+              </div>
+
+              {/* Summary card */}
+              <div className="bg-[#F5F9F8] border border-[#5A9696]/30 rounded-2xl p-4 text-left space-y-2.5">
+                <div className="flex justify-between items-center pb-2 border-b border-[#0B272D]/10">
+                  <span className="text-xs text-gray-500 font-medium">Titular:</span>
+                  <span className="text-sm font-bold text-[#0B272D]">
+                    {duplicateGuest.nombre} {duplicateGuest.apellido}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pb-2 border-b border-[#0B272D]/10">
+                  <span className="text-xs text-gray-500 font-medium">Asistencia:</span>
+                  <span className="text-xs font-semibold text-[#0B272D]">
+                    {duplicateGuest.asistencia === 'attending'
+                      ? `✓ Sí asiste (${duplicateGuest.invitados} ${duplicateGuest.invitados > 1 ? 'personas' : 'persona'})`
+                      : '✗ No asiste'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500 font-medium">Estado del Pago:</span>
+                  <div>
+                    {duplicateGuest.estadoPago === 'aprobado' ? (
+                      <span className="bg-[#EBF7EE] text-[#1B6E32] font-bold px-2.5 py-0.5 rounded-full text-xs">
+                        ✓ Pago Aprobado
+                      </span>
+                    ) : duplicateGuest.estadoPago === 'en_revision' ? (
+                      <span className="bg-[#EBF5FB] text-[#1D6F93] font-bold px-2.5 py-0.5 rounded-full text-xs">
+                        🔍 En Revisión
+                      </span>
+                    ) : duplicateGuest.estadoPago === 'no_aplica' ? (
+                      <span className="bg-gray-100 text-gray-600 font-bold px-2.5 py-0.5 rounded-full text-xs">
+                        No aplica
+                      </span>
+                    ) : (
+                      <span className="bg-[#FAF0E6] text-[#8C5A00] font-bold px-2.5 py-0.5 rounded-full text-xs">
+                        ⏳ Pendiente de Pago
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Link
+                  to={`/pago?id=${duplicateGuest.id}`}
+                  className="flex-1 py-3.5 px-4 bg-[#0B272D] hover:bg-[#051518] text-white text-xs sm:text-sm font-bold rounded-xl transition-all text-center flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  onClick={() => setDuplicateGuest(null)}
+                >
+                  <span>💳</span>
+                  <span>Ver mi reserva o subir comprobante →</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setDuplicateGuest(null)}
+                  className="py-3.5 px-5 bg-[#E0E8E5] hover:bg-[#D6E4BA] text-[#0B272D] text-xs sm:text-sm font-bold rounded-xl transition-all"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </section>
+        )
+      }
+    </section >
   );
 };

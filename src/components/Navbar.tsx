@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../services/authService';
-import { isAuthorizedUser } from '../services/AuthorizedUser';
+
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,8 +35,7 @@ export const Navbar: React.FC = () => {
   };
 
   // Verificar si el usuario está autorizado
-  const isAdmin = user && isAuthorizedUser(user.email);
-
+  const isAdmin = user
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-sans ${isScrolled

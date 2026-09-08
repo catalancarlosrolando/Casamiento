@@ -85,7 +85,7 @@ export const Dashboard = () => {
   return (
     <div className="min-h-screen bg-[#F0F4F2] py-10 px-4 sm:px-6 lg:px-8 font-sans text-[#1D373C]">
       <div className="max-w-7xl mx-auto space-y-8">
-        
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-[#0B272D]/10">
           <div>
@@ -177,11 +177,10 @@ export const Dashboard = () => {
               <button
                 key={tab}
                 onClick={() => setStatusFilter(tab)}
-                className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
-                  statusFilter === tab
-                    ? 'bg-[#0B272D] text-white'
-                    : 'bg-[#F0F4F2] text-[#0B272D] hover:bg-[#E0E8E5]'
-                }`}
+                className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${statusFilter === tab
+                  ? 'bg-[#0B272D] text-white'
+                  : 'bg-[#F0F4F2] text-[#0B272D] hover:bg-[#E0E8E5]'
+                  }`}
               >
                 {tab === 'todos' && 'Todos'}
                 {tab === 'en_revision' && '⏳ En Revisión'}
@@ -305,9 +304,9 @@ export const Dashboard = () => {
 
                       {/* Extra message / song */}
                       <td className="py-4 px-4 max-w-xs truncate text-[11px] text-gray-600">
-                        {item.mensaje && <p className="truncate" title={item.mensaje}>💬 {item.mensaje}</p>}
+                        {item.observacion && <p className="truncate" title={item.observacion}>💬 {item.observacion}</p>}
                         {item.cancion && <p className="truncate" title={item.cancion}>🎵 {item.cancion}</p>}
-                        {!item.mensaje && !item.cancion && <span className="text-gray-300">-</span>}
+                        {!item.observacion && !item.cancion && <span className="text-gray-300">-</span>}
                       </td>
 
                       {/* Action buttons */}

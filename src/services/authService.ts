@@ -1,5 +1,7 @@
 import { 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   signOut, 
   GoogleAuthProvider,
   onAuthStateChanged
@@ -15,7 +17,26 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-// Iniciar sesión con Google
+// Comprobar resultado si el usuario vuelve de una redirección de Google
+export const checkRedirectResult = async (): Promise<{ success: boolean; user?: User; error?: string }> => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      return { success: true, user: result.user };
+    }
+    return { success: false };
+  } catch (error: any) {
+    console.error('Error al procesar redirección de Google:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Iniciar sesión con redirección completa (ideal para móviles o navegadores que bloquean popups)
+export const signInWithGoogleRedirect = async () => {
+  return signInWithRedirect(auth, googleProvider);
+};
+
+// Iniciar sesión con Google (intenta Popup, si se bloquea o falla, ofrece fallback)
 export const signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
@@ -24,10 +45,21 @@ export const signInWithGoogle = async () => {
       user: result.user
     };
   } catch (error: any) {
-    console.error('Error al iniciar sesión con Google:', error);
+    console.warn('Advertencia en signInWithPopup:', error);
+    let errorMessage = error.message;
+
+    if (error.code === 'auth/unauthorized-domain') {
+      errorMessage = 'Dominio no autorizado. Agrega "casamiento-carlos.web.app" en Firebase Console > Authentication > Settings > Authorized domains.';
+    } else if (error.code === 'auth/popup-blocked') {
+      errorMessage = 'El navegador bloqueó la ventana emergente. Redirigiendo para iniciar sesión...';
+    } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+      errorMessage = 'Se cerró la ventana de inicio de sesión antes de completar el proceso.';
+    }
+
     return {
       success: false,
-      error: error.message
+      error: errorMessage,
+      code: error.code
     };
   }
 };

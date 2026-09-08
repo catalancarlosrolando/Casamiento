@@ -14,7 +14,7 @@ import imageCompression from 'browser-image-compression';
 import { db, storage } from '../firebase/firebase';
 
 export type EstadoPago = 'pendiente' | 'en_revision' | 'aprobado' | 'rechazado' | 'no_aplica';
-export type OpcionPago = 'ahora' | 'tarde' | 'no_aplica';
+export type OpcionPago = 'ahora' | 'tarde' | 'fraccionado' | 'no_aplica';
 export type Asistencia = 'attending' | 'declined';
 
 export interface Invitado {
@@ -25,10 +25,12 @@ export interface Invitado {
   asistencia: Asistencia;
   invitados: number;
   restriccionAlimentaria: string;
-  mensaje?: string;
+  otros: string;
+  observacion?: string;
   cancion?: string;
   opcionPago: OpcionPago;
   montoTotal: number;
+  montoPagado: number;
   estadoPago: EstadoPago;
   comprobanteUrl: string | null;
   comprobanteNombre: string | null;
@@ -188,10 +190,12 @@ export const createInvitado = async (
     asistencia: data.asistencia,
     invitados: isAttending ? data.invitados : 0,
     restriccionAlimentaria: data.restriccionAlimentaria || 'ninguno',
-    mensaje: data.mensaje?.trim() || '',
+    otros: data.otros?.trim() || '',
+    observacion: data.observacion?.trim() || '',
     cancion: data.cancion?.trim() || '',
     opcionPago,
     montoTotal: isAttending ? data.montoTotal : 0,
+    montoPagado: data.montoPagado || 0,
     estadoPago,
     comprobanteUrl: null as string | null,
     comprobanteNombre: null as string | null,

@@ -406,7 +406,7 @@ export const Pago: React.FC = () => {
               )}
 
               {/* SUMMARY GRID & BANK DETAILS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 ">
 
                 {/* Left: Summary Details Card */}
                 <div className="bg-[#F7FAF9] rounded-2xl p-5 border border-[#0B272D]/10 space-y-3 text-xs">

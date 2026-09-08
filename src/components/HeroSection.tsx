@@ -47,8 +47,9 @@ export const HeroSection: React.FC = () => {
     const title = encodeURIComponent("Casamiento de Mariana & Carlos");
     const details = encodeURIComponent("Acompáñanos a celebrar el casamiento de Mariana y Carlos en Complejo Nautico Ullum.");
     const location = encodeURIComponent("Salon Complejo Nautico Ullum, San Juan");
-    const dates = "20261107T210000Z/20261108T050000Z";
-    const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+    // 21:00 hs (7 Nov) a 05:00 hs (8 Nov) en Hora Argentina (UTC-3) -> 00:00Z a 08:00Z (8 Nov)
+    const dates = "20261108T000000Z/20261108T080000Z";
+    const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}&ctz=America/Argentina/Buenos_Aires`;
     window.open(googleUrl, '_blank');
   };
 
@@ -94,7 +95,7 @@ export const HeroSection: React.FC = () => {
 
         {/* Script Intro */}
         <p className="font-script text-2xl sm:text-3xl lg:text-4xl text-[#D6E4BA] mb-3 font-normal max-w-1xl mx-auto leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
-          Ven y celebra con nosotros el casamiento de
+          Acompáñanos a celebrar nuestro casamiento
         </p>
 
         {/* Couple Title */}
