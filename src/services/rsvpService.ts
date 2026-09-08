@@ -13,9 +13,17 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
 import { db, storage } from '../firebase/firebase';
 
-export type EstadoPago = 'pendiente' | 'en_revision' | 'aprobado' | 'rechazado' | 'no_aplica';
+export type EstadoPago = 'pendiente' | 'parcialmente_pagado' | 'en_revision' | 'aprobado' | 'rechazado' | 'no_aplica';
 export type OpcionPago = 'ahora' | 'tarde' | 'fraccionado' | 'no_aplica';
 export type Asistencia = 'attending' | 'declined';
+
+export interface PagoItem {
+  id: string;
+  monto: number;
+  comprobanteUrl?: string | null;
+  comprobanteNombre?: string | null;
+  fecha: any;
+}
 
 export interface Invitado {
   id: string;
@@ -36,9 +44,10 @@ export interface Invitado {
   comprobanteNombre: string | null;
   fechaRegistro: any;
   fechaPago: any | null;
+  pagos?: PagoItem[];
 }
 
-export type InvitadoInput = Omit<Invitado, 'id' | 'comprobanteUrl' | 'comprobanteNombre' | 'fechaRegistro' | 'fechaPago'>;
+export type InvitadoInput = Omit<Invitado, 'id' | 'comprobanteUrl' | 'comprobanteNombre' | 'fechaRegistro' | 'fechaPago' | 'pagos'>;
 
 export class TelefonoDuplicadoError extends Error {
   invitadoExistente: Invitado;
@@ -177,10 +186,22 @@ export const createInvitado = async (
   }
 
   const isAttending = data.asistencia === 'attending';
+  const opcionPago: OpcionPago = isAttending ? data.opcionPago : 'no_aplica';
+
+  let montoInicialPagado = 0;
+  if (isAttending) {
+    if (opcionPago === 'ahora') {
+      montoInicialPagado = data.montoPagado || data.montoTotal;
+    } else if (opcionPago === 'fraccionado') {
+      montoInicialPagado = data.montoPagado || 0;
+    } else {
+      montoInicialPagado = 0;
+    }
+  }
+
   const estadoPago: EstadoPago = !isAttending
     ? 'no_aplica'
-    : (file ? 'en_revision' : 'pendiente');
-  const opcionPago: OpcionPago = isAttending ? data.opcionPago : 'no_aplica';
+    : (file ? 'en_revision' : (montoInicialPagado > 0 ? 'parcialmente_pagado' : 'pendiente'));
 
   // Inicializar documento en Firestore
   const docData = {
@@ -195,12 +216,13 @@ export const createInvitado = async (
     cancion: data.cancion?.trim() || '',
     opcionPago,
     montoTotal: isAttending ? data.montoTotal : 0,
-    montoPagado: data.montoPagado || 0,
+    montoPagado: montoInicialPagado,
     estadoPago,
     comprobanteUrl: null as string | null,
     comprobanteNombre: null as string | null,
     fechaRegistro: serverTimestamp(),
     fechaPago: null as any,
+    pagos: [] as PagoItem[],
   };
 
   const docRef = await addDoc(collection(db, 'invitados'), docData);
@@ -209,20 +231,32 @@ export const createInvitado = async (
   let comprobanteUrl: string | null = null;
   let comprobanteNombre: string | null = null;
   let fechaPago: any = null;
+  let pagosList: PagoItem[] = [];
 
-  // Si adjuntó archivo de inmediato
-  if (isAttending && file) {
-    const uploadResult = await uploadComprobanteStorage(file, invitadoId);
-    console.log(uploadResult);
-    comprobanteUrl = uploadResult.downloadUrl;
-    comprobanteNombre = uploadResult.fileName;
-    fechaPago = serverTimestamp();
+  // Si adjuntó archivo de inmediato o registró un monto inicial
+  if (isAttending && (file || montoInicialPagado > 0)) {
+    if (file) {
+      const uploadResult = await uploadComprobanteStorage(file, invitadoId);
+      comprobanteUrl = uploadResult.downloadUrl;
+      comprobanteNombre = uploadResult.fileName;
+      fechaPago = serverTimestamp();
+    }
+
+    const initialPago: PagoItem = {
+      id: `pago_${Date.now()}`,
+      monto: montoInicialPagado,
+      comprobanteUrl: comprobanteUrl || null,
+      comprobanteNombre: comprobanteNombre || null,
+      fecha: new Date().toISOString(),
+    };
+    pagosList = [initialPago];
 
     await updateDoc(doc(db, 'invitados', invitadoId), {
       comprobanteUrl,
       comprobanteNombre,
-      estadoPago: 'en_revision',
+      estadoPago: file ? 'en_revision' : estadoPago,
       fechaPago,
+      pagos: pagosList,
     });
   }
 
@@ -232,6 +266,7 @@ export const createInvitado = async (
     comprobanteUrl,
     comprobanteNombre,
     fechaPago,
+    pagos: pagosList,
   };
 };
 
@@ -276,23 +311,94 @@ export const getInvitadosByTelefono = async (telefono: string): Promise<Invitado
 };
 
 /**
- * Actualiza el comprobante de un invitado existente (Carga diferida)
+ * Agrega un nuevo pago / comprobante a un invitado existente de forma histórica y acumulativa
  */
-export const updateComprobanteInvitado = async (
+export const addPagoInvitado = async (
   invitadoId: string,
-  file: File
-): Promise<{ downloadUrl: string; fileName: string }> => {
-  const { downloadUrl, fileName } = await uploadComprobanteStorage(file, invitadoId);
+  monto: number,
+  file?: File | null
+): Promise<{ invitadoActualizado: Invitado; nuevoPago: PagoItem }> => {
+  const invitadoDoc = await getInvitadoById(invitadoId);
+  if (!invitadoDoc) {
+    throw new Error('No se encontró el invitado.');
+  }
+
+  let downloadUrl: string | null = null;
+  let fileName: string | null = null;
+
+  if (file) {
+    const uploadResult = await uploadComprobanteStorage(file, invitadoId);
+    downloadUrl = uploadResult.downloadUrl;
+    fileName = uploadResult.fileName;
+  }
+
+  const existingPagos: PagoItem[] = Array.isArray(invitadoDoc.pagos) ? [...invitadoDoc.pagos] : [];
+
+  // Si tiene un comprobante anterior que no estaba en el array pagos, migrarlo
+  if (existingPagos.length === 0 && (invitadoDoc.comprobanteUrl || (invitadoDoc.montoPagado && invitadoDoc.montoPagado > 0))) {
+    existingPagos.push({
+      id: `pago_legacy_${Date.now()}`,
+      monto: invitadoDoc.montoPagado || 0,
+      comprobanteUrl: invitadoDoc.comprobanteUrl || null,
+      comprobanteNombre: invitadoDoc.comprobanteNombre || null,
+      fecha: invitadoDoc.fechaPago || invitadoDoc.fechaRegistro || new Date().toISOString(),
+    });
+  }
+
+  const nuevoPago: PagoItem = {
+    id: `pago_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    monto: Number(monto) || 0,
+    comprobanteUrl: downloadUrl || null,
+    comprobanteNombre: fileName || null,
+    fecha: new Date().toISOString(),
+  };
+
+  existingPagos.push(nuevoPago);
+
+  const nuevoMontoPagado = (invitadoDoc.montoPagado || 0) + (Number(monto) || 0);
+  const nuevoEstado: EstadoPago = file
+    ? 'en_revision'
+    : (nuevoMontoPagado >= invitadoDoc.montoTotal && invitadoDoc.montoTotal > 0
+      ? (invitadoDoc.estadoPago === 'aprobado' ? 'aprobado' : 'en_revision')
+      : (nuevoMontoPagado > 0 ? 'parcialmente_pagado' : invitadoDoc.estadoPago));
 
   await updateDoc(doc(db, 'invitados', invitadoId), {
-    comprobanteUrl: downloadUrl,
-    comprobanteNombre: fileName,
-    estadoPago: 'en_revision',
-    opcionPago: 'ahora',
+    pagos: existingPagos,
+    montoPagado: nuevoMontoPagado,
+    estadoPago: nuevoEstado,
+    comprobanteUrl: downloadUrl || invitadoDoc.comprobanteUrl,
+    comprobanteNombre: fileName || invitadoDoc.comprobanteNombre,
     fechaPago: serverTimestamp(),
   });
 
-  return { downloadUrl, fileName };
+  const invitadoActualizado: Invitado = {
+    ...invitadoDoc,
+    pagos: existingPagos,
+    montoPagado: nuevoMontoPagado,
+    estadoPago: nuevoEstado,
+    comprobanteUrl: downloadUrl || invitadoDoc.comprobanteUrl,
+    comprobanteNombre: fileName || invitadoDoc.comprobanteNombre,
+    fechaPago: new Date(),
+  };
+
+  return { invitadoActualizado, nuevoPago };
+};
+
+/**
+ * Actualiza el comprobante de un invitado existente (Compatible con llamadas anteriores)
+ */
+export const updateComprobanteInvitado = async (
+  invitadoId: string,
+  file: File,
+  monto?: number
+): Promise<{ downloadUrl: string; fileName: string }> => {
+  const invitado = await getInvitadoById(invitadoId);
+  const montoAbono = monto !== undefined ? monto : (invitado ? Math.max(0, invitado.montoTotal - (invitado.montoPagado || 0)) : 0);
+  const { nuevoPago } = await addPagoInvitado(invitadoId, montoAbono, file);
+  return {
+    downloadUrl: nuevoPago.comprobanteUrl || '',
+    fileName: nuevoPago.comprobanteNombre || '',
+  };
 };
 
 /**
@@ -318,7 +424,7 @@ export const getAllInvitados = async (): Promise<Invitado[]> => {
  */
 export const updateEstadoPago = async (
   invitadoId: string,
-  nuevoEstado: 'pendiente' | 'en_revision' | 'aprobado' | 'rechazado'
+  nuevoEstado: EstadoPago
 ): Promise<void> => {
   await updateDoc(doc(db, 'invitados', invitadoId), {
     estadoPago: nuevoEstado,

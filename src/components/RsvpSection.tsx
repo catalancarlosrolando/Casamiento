@@ -176,7 +176,9 @@ export const RsvpSection: React.FC = () => {
           cancion: songRequest,
           opcionPago: attendance === 'attending' ? paymentOption : 'no_aplica',
           montoTotal: totalAmount,
-          montoPagado: amountPartial,
+          montoPagado: attendance === 'attending'
+            ? (paymentOption === 'fraccionado' ? amountPartial : (paymentOption === 'ahora' && fileToUpload ? totalAmount : 0))
+            : 0,
           estadoPago: attendance !== 'attending'
             ? 'no_aplica'
             : (fileToUpload ? 'en_revision' : 'pendiente'),

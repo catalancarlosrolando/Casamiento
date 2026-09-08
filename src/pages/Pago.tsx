@@ -3,8 +3,9 @@ import { useSearchParams, Link } from 'react-router-dom';
 import {
   getInvitadoById,
   getInvitadosByTelefono,
-  updateComprobanteInvitado,
-  type Invitado
+  addPagoInvitado,
+  type Invitado,
+  type PagoItem
 } from '../services/rsvpService';
 
 interface AttachedFile {
@@ -27,7 +28,8 @@ export const Pago: React.FC = () => {
   const [phoneSearchResults, setPhoneSearchResults] = useState<Invitado[] | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
-  // File Upload States
+  // File Upload & Amount States
+  const [abonoMonto, setAbonoMonto] = useState<number>(0);
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -37,7 +39,6 @@ export const Pago: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-
 
   // Format file size
   const formatFileSize = (bytes: number): string => {
@@ -54,6 +55,8 @@ export const Pago: React.FC = () => {
       const data = await getInvitadoById(id);
       if (data) {
         setInvitado(data);
+        const saldo = Math.max(0, (data.montoTotal || 0) - (data.montoPagado || 0));
+        setAbonoMonto(saldo > 0 ? saldo : (data.montoTotal || 0));
       } else {
         setGeneralError('No encontramos ninguna reserva con ese identificador. Puedes buscarla con tu número de teléfono.');
         setInvitado(null);
@@ -96,6 +99,8 @@ export const Pago: React.FC = () => {
         );
       } else if (results.length === 1) {
         setInvitado(results[0]);
+        const saldo = Math.max(0, (results[0].montoTotal || 0) - (results[0].montoPagado || 0));
+        setAbonoMonto(saldo > 0 ? saldo : (results[0].montoTotal || 0));
         setSearchParams({ id: results[0].id });
       } else {
         setPhoneSearchResults(results);
@@ -110,6 +115,8 @@ export const Pago: React.FC = () => {
 
   const handleSelectFromResult = (selected: Invitado) => {
     setInvitado(selected);
+    const saldo = Math.max(0, (selected.montoTotal || 0) - (selected.montoPagado || 0));
+    setAbonoMonto(saldo > 0 ? saldo : (selected.montoTotal || 0));
     setPhoneSearchResults(null);
     setSearchParams({ id: selected.id });
   };
@@ -156,8 +163,10 @@ export const Pago: React.FC = () => {
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!invitado || !attachedFile) {
-      setFileError('Por favor selecciona tu comprobante para enviar.');
+    if (!invitado) return;
+
+    if (!attachedFile && abonoMonto <= 0) {
+      setFileError('Por favor adjunta un comprobante o especifica un monto válido a registrar.');
       return;
     }
 
@@ -165,18 +174,19 @@ export const Pago: React.FC = () => {
     setFileError(null);
 
     try {
-      const { downloadUrl, fileName } = await updateComprobanteInvitado(invitado.id, attachedFile.file);
-      setInvitado({
-        ...invitado,
-        comprobanteUrl: downloadUrl,
-        comprobanteNombre: fileName,
-        estadoPago: 'en_revision',
-        fechaPago: new Date(),
-      });
+      const { invitadoActualizado } = await addPagoInvitado(
+        invitado.id,
+        Number(abonoMonto) || 0,
+        attachedFile?.file || null
+      );
+      setInvitado(invitadoActualizado);
       setUploadSuccess(true);
+      handleClearFile();
+      const nuevoSaldo = Math.max(0, (invitadoActualizado.montoTotal || 0) - (invitadoActualizado.montoPagado || 0));
+      setAbonoMonto(nuevoSaldo);
     } catch (err) {
-      console.error('Error al subir comprobante:', err);
-      setFileError('Error al subir el archivo. Verifica tu conexión e inténtalo nuevamente.');
+      console.error('Error al subir comprobante / registrar pago:', err);
+      setFileError('Error al procesar el pago. Verifica tu conexión e inténtalo nuevamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -405,8 +415,8 @@ export const Pago: React.FC = () => {
                 </div>
               )}
 
-              {/* SUMMARY GRID & BANK DETAILS */}
-              <div className="grid grid-cols-1 ">
+              {/* SUMMARY GRID & FINANCIAL DETAILS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 {/* Left: Summary Details Card */}
                 <div className="bg-[#F7FAF9] rounded-2xl p-5 border border-[#0B272D]/10 space-y-3 text-xs">
@@ -430,40 +440,171 @@ export const Pago: React.FC = () => {
                     <span className="font-bold text-[#0B272D]">$75.000 ARS</span>
                   </div>
 
-                  <div className="flex justify-between py-2 border-t border-[#0B272D]/10 text-sm">
-                    <span className="font-bold text-[#0B272D]">Total a Transferir:</span>
-                    <span className="font-bold text-[#0B272D] text-base">${invitado.montoTotal.toLocaleString('es-AR')} ARS</span>
+                  <div className="flex justify-between py-1 border-t border-[#0B272D]/10">
+                    <span className="text-gray-600 font-semibold">Total Reserva:</span>
+                    <span className="font-bold text-[#0B272D]">${(invitado.montoTotal || 0).toLocaleString('es-AR')} ARS</span>
                   </div>
 
-                  {invitado.comprobanteUrl && (
-                    <div className="pt-2 border-t border-[#0B272D]/10">
-                      <span className="text-gray-500 block mb-1">Comprobante actual:</span>
-                      <a
-                        href={invitado.comprobanteUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 font-bold text-[#5A9696] hover:text-[#0B272D] underline text-[11px]"
-                      >
-                        📄 Ver archivo adjunto ({invitado.comprobanteNombre || 'Comprobante'})
-                      </a>
-                    </div>
-                  )}
+                  <div className="flex justify-between py-1">
+                    <span className="text-gray-600 font-semibold">Abonado a la Fecha:</span>
+                    <span className="font-bold text-[#5A9696]">${(invitado.montoPagado || 0).toLocaleString('es-AR')} ARS</span>
+                  </div>
+
+                  <div className="flex justify-between py-2 border-t border-[#0B272D]/10 text-sm">
+                    <span className="font-bold text-[#0B272D]">Saldo Restante:</span>
+                    <span className={`font-bold text-base ${Math.max(0, (invitado.montoTotal || 0) - (invitado.montoPagado || 0)) === 0 ? 'text-[#3E7B27]' : 'text-[#B85042]'}`}>
+                      ${Math.max(0, (invitado.montoTotal || 0) - (invitado.montoPagado || 0)).toLocaleString('es-AR')} ARS
+                    </span>
+                  </div>
                 </div>
 
+                {/* Right: Bank Details Card */}
+                <div className="bg-[#FAFDF9] rounded-2xl p-5 border border-[#BBDB93]/60 space-y-3 text-xs">
+                  <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] pb-2 border-b border-[#0B272D]/10 flex items-center justify-between">
+                    <span>Datos Bancarios para Transferencia</span>
+                    <span>🏦</span>
+                  </h3>
 
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-[10px] text-gray-500 block uppercase font-semibold">Banco</span>
+                      <span className="font-bold text-[#0B272D]">Banco Santander</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-gray-500 block uppercase font-semibold">Titular</span>
+                      <span className="font-bold text-[#0B272D]">Mariana & Carlos</span>
+                    </div>
+                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
+                      <div>
+                        <span className="text-[10px] text-gray-500 block uppercase font-semibold">Alias</span>
+                        <span className="font-mono font-bold text-[#0B272D]">boda.mariana.carlos</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy('boda.mariana.carlos', 'alias')}
+                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] underline"
+                      >
+                        {copiedField === 'alias' ? '¡Copiado!' : 'Copiar'}
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
+                      <div>
+                        <span className="text-[10px] text-gray-500 block uppercase font-semibold">CBU</span>
+                        <span className="font-mono font-bold text-[#0B272D] text-[11px]">0720123488000012345678</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy('0720123488000012345678', 'cbu')}
+                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] underline"
+                      >
+                        {copiedField === 'cbu' ? '¡Copiado!' : 'Copiar'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
               </div>
+
+              {/* HISTORICAL DELIVERIES & RECEIPTS GALLERY */}
+              {((invitado.pagos && invitado.pagos.length > 0) || invitado.comprobanteUrl) && (
+                <div className="pt-4 border-t border-[#0B272D]/10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-serif-display text-lg font-bold text-[#0B272D]">
+                      Historial de Abonos & Comprobantes Subidos
+                    </h3>
+                    <span className="text-[11px] font-bold text-[#5A9696] bg-[#E0E8E5] px-2.5 py-0.5 rounded-full">
+                      {invitado.pagos ? invitado.pagos.length : 1} entrega{(invitado.pagos?.length || 1) > 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {(invitado.pagos && invitado.pagos.length > 0
+                      ? invitado.pagos
+                      : [
+                        {
+                          id: 'legacy_1',
+                          monto: invitado.montoPagado || 0,
+                          comprobanteUrl: invitado.comprobanteUrl,
+                          comprobanteNombre: invitado.comprobanteNombre || 'Comprobante',
+                          fecha: invitado.fechaPago || invitado.fechaRegistro,
+                        },
+                      ]
+                    ).map((pago: PagoItem, idx: number) => (
+                      <div
+                        key={pago.id || idx}
+                        className="bg-[#F7FAF9] rounded-xl p-3.5 border border-[#0B272D]/10 flex items-center justify-between text-xs"
+                      >
+                        <div className="space-y-0.5 truncate pr-2">
+                          <span className="text-[10px] font-bold text-[#5A9696] uppercase block">
+                            Entrega #{idx + 1} · {pago.fecha ? new Date(pago.fecha?.toDate ? pago.fecha.toDate() : pago.fecha).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Fecha registrada'}
+                          </span>
+                          <p className="font-bold text-[#0B272D] text-sm">
+                            ${(pago.monto || 0).toLocaleString('es-AR')} ARS
+                          </p>
+                          {pago.comprobanteNombre && (
+                            <p className="text-[10px] text-gray-500 truncate" title={pago.comprobanteNombre}>
+                              📄 {pago.comprobanteNombre}
+                            </p>
+                          )}
+                        </div>
+
+                        {pago.comprobanteUrl ? (
+                          <a
+                            href={pago.comprobanteUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="shrink-0 px-3 py-1.5 bg-white hover:bg-[#BBDB93] border border-[#0B272D]/20 rounded-lg font-bold text-[10px] text-[#0B272D] transition-colors shadow-sm"
+                          >
+                            Ver Archivo ↗
+                          </a>
+                        ) : (
+                          <span className="text-[10px] text-gray-400 italic">Sin archivo</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* UPLOAD FORM SECTION */}
               <div className="pt-4 border-t border-[#0B272D]/10">
                 <h3 className="font-serif-display text-xl font-bold text-[#0B272D] mb-1">
-                  {invitado.comprobanteUrl ? '¿Deseas reemplazar el comprobante?' : 'Adjuntar Comprobante de Transferencia'}
+                  {Math.max(0, (invitado.montoTotal || 0) - (invitado.montoPagado || 0)) === 0
+                    ? 'Subir Comprobante Adicional'
+                    : 'Cargar Nuevo Abono / Comprobante'}
                 </h3>
                 <p className="text-xs text-gray-600 mb-4">
-                  Sube una foto clara de la transferencia bancaria o el archivo PDF emitido por tu banco.
+                  Ingresa el monto transferido en esta ocasión y adjunta el comprobante emitido por tu banco. Se registrará de forma acumulativa en tu historial.
                 </p>
 
                 <form onSubmit={handleUploadSubmit} className="space-y-4">
+                  {/* Amount to declare in this submission */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                      Monto de esta transferencia ($ ARS) <span className="text-[#5A9696]">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={invitado.montoTotal * 2}
+                      placeholder="Ej: 75000"
+                      value={abonoMonto === 0 ? '' : abonoMonto}
+                      onChange={(e) => setAbonoMonto(e.target.value ? Number(e.target.value) : 0)}
+                      className="w-full h-12 px-4 rounded-xl bg-[#F7FAF9] border border-[#0B272D]/20 text-sm font-semibold text-[#0B272D] placeholder-[#426B6B]/60 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
+                    />
+                    <div className="flex gap-2 mt-1.5">
+                      {Math.max(0, (invitado.montoTotal || 0) - (invitado.montoPagado || 0)) > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setAbonoMonto(Math.max(0, (invitado.montoTotal || 0) - (invitado.montoPagado || 0)))}
+                          className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] bg-[#E0E8E5]/60 hover:bg-[#D6E4BA] px-2 py-0.5 rounded-full transition-colors"
+                        >
+                          Llenar con Saldo Restante (${Math.max(0, (invitado.montoTotal || 0) - (invitado.montoPagado || 0)).toLocaleString('es-AR')})
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Hidden input */}
                   <input
                     type="file"
@@ -529,7 +670,7 @@ export const Pago: React.FC = () => {
                             {attachedFile.name}
                           </p>
                           <p className="text-[11px] text-[#5A9696]">
-                            {attachedFile.sizeFormatted} · <span className="font-semibold text-[#0B272D]">Listo para subir</span>
+                            {attachedFile.sizeFormatted} · <span className="font-semibold text-[#0B272D]">Listo para registrar</span>
                           </p>
                         </div>
                       </div>
@@ -553,22 +694,20 @@ export const Pago: React.FC = () => {
                     </p>
                   )}
 
-                  {attachedFile && (
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full h-12 bg-[#0B272D] hover:bg-[#051518] disabled:bg-[#0B272D]/60 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Subiendo comprobante...</span>
-                        </>
-                      ) : (
-                        <span>Subir y Guardar Comprobante</span>
-                      )}
-                    </button>
-                  )}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || (!attachedFile && abonoMonto <= 0)}
+                    className="w-full h-12 bg-[#0B272D] hover:bg-[#051518] disabled:bg-[#0B272D]/40 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Procesando entrega...</span>
+                      </>
+                    ) : (
+                      <span>Registrar Abono y Subir Comprobante</span>
+                    )}
+                  </button>
                 </form>
               </div>
 
