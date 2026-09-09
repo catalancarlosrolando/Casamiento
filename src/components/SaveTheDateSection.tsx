@@ -71,52 +71,8 @@ export const SaveTheDateSection: React.FC = () => {
         <div className="bg-white rounded-[20px] shadow-xl border border-[#0B272D]/15 p-6 sm:p-10 max-w-[1040px] mx-auto">
           <div className="flex flex-col md:flex-row items-stretch gap-8 lg:gap-10">
 
-            {/* ============================================================ */}
-            {/* Left Column: Typography Lockup (07 reserva / 11 nuestra / 26 fecha) */}
-            {/* ============================================================ */}
-            <div className="w-full md:w-[45%] lg:w-[420px] flex-shrink-0 bg-[#FAFBF9] rounded-2xl p-6 sm:p-8 border border-[#0B272D]/10 flex flex-col items-center justify-between min-h-[480px] md:min-h-[580px] text-center shadow-inner">
-              <div className="w-full my-auto space-y-4 py-4">
-
-                {/* Row 1: 07 reserva */}
-                <div className="flex items-center justify-center gap-4">
-                  <span className="font-serif-display text-7xl sm:text-8xl font-semibold text-[#0B272D] leading-none tracking-tight">
-                    07
-                  </span>
-                  <span className="font-script text-5xl sm:text-6xl text-[#5A9696] leading-none pt-2">
-                    reserva
-                  </span>
-                </div>
-
-                {/* Row 2: 11 nuestra */}
-                <div className="flex items-center justify-center gap-4">
-                  <span className="font-serif-display text-7xl sm:text-8xl font-semibold text-[#0B272D] leading-none tracking-tight">
-                    11
-                  </span>
-                  <span className="font-script text-5xl sm:text-6xl text-[#5A9696] leading-none pt-2">
-                    nuestra
-                  </span>
-                </div>
-
-                {/* Row 3: 26 fecha */}
-                <div className="flex items-center justify-center gap-4">
-                  <span className="font-serif-display text-7xl sm:text-8xl font-semibold text-[#0B272D] leading-none tracking-tight">
-                    26
-                  </span>
-                  <span className="font-script text-5xl sm:text-6xl text-[#5A9696] leading-none pt-2">
-                    fecha
-                  </span>
-                </div>
-
-              </div>
-
-              {/* Footnote Left */}
-              <div className="w-full pt-6 border-t border-[#0B272D]/10 text-[#5A9696] text-[11px] font-semibold tracking-[0.2em] uppercase font-sans">
-                🌿 — NOVIEMBRE 2026 — 🌿
-              </div>
-            </div>
-
             {/* Vertical Hairline Divider for Desktop */}
-            <div className="hidden md:block w-[1px] bg-[#0B272D]/15 self-stretch my-2 flex-shrink-0" />
+
 
             {/* ============================================================ */}
             {/* Right Column: Calendar & Announcement */}
