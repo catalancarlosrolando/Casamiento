@@ -1,7 +1,7 @@
 import {
   collection,
   doc,
-  addDoc,
+  setDoc,
   getDoc,
   getDocs,
   query,
@@ -151,16 +151,16 @@ export const uploadComprobanteStorage = async (
     const fileName = `comprobante_${Date.now()}.${fileExt}`;
     const fileRef = ref(storage, `comprobantes/${invitadoId}/${fileName}`);
 
-    console.log(`[Storage] Subiendo archivo a comprobantes/${invitadoId}/${fileName}...`);
+    //console.log(`[Storage] Subiendo archivo a comprobantes/${invitadoId}/${fileName}...`);
     const snapshot = await uploadBytes(fileRef, processedFile);
-    console.log('[Storage] Archivo subido con éxito. Obteniendo downloadURL...');
+    //console.log('[Storage] Archivo subido con éxito. Obteniendo downloadURL...');
 
     const downloadUrl = await getDownloadURL(snapshot.ref);
-    console.log('[Storage] downloadURL obtenida:', downloadUrl);
+    //console.log('[Storage] downloadURL obtenida:', downloadUrl);
 
     return { downloadUrl, fileName };
   } catch (error: any) {
-    console.error('[Storage Error] Falló la subida u obtención de URL del comprobante:', error);
+    //console.error('[Storage Error] Falló la subida u obtención de URL del comprobante:', error);
     throw error;
   }
 };
@@ -203,29 +203,8 @@ export const createInvitado = async (
     ? 'no_aplica'
     : (file ? 'en_revision' : (montoInicialPagado > 0 ? 'parcialmente_pagado' : 'pendiente'));
 
-  // Inicializar documento en Firestore
-  const docData = {
-    nombre: data.nombre.trim(),
-    apellido: data.apellido.trim(),
-    telefono: cleanPhone,
-    asistencia: data.asistencia,
-    invitados: isAttending ? data.invitados : 0,
-    restriccionAlimentaria: data.restriccionAlimentaria || 'ninguno',
-    otros: data.otros?.trim() || '',
-    observacion: data.observacion?.trim() || '',
-    cancion: data.cancion?.trim() || '',
-    opcionPago,
-    montoTotal: isAttending ? data.montoTotal : 0,
-    montoPagado: montoInicialPagado,
-    estadoPago,
-    comprobanteUrl: null as string | null,
-    comprobanteNombre: null as string | null,
-    fechaRegistro: serverTimestamp(),
-    fechaPago: null as any,
-    pagos: [] as PagoItem[],
-  };
-
-  const docRef = await addDoc(collection(db, 'invitados'), docData);
+  // Generar ID de documento de antemano
+  const docRef = doc(collection(db, 'invitados'));
   const invitadoId = docRef.id;
 
   let comprobanteUrl: string | null = null;
@@ -233,7 +212,7 @@ export const createInvitado = async (
   let fechaPago: any = null;
   let pagosList: PagoItem[] = [];
 
-  // Si adjuntó archivo de inmediato o registró un monto inicial
+  // Si adjuntó comprobante o registró pago inicial, subirlo primero
   if (isAttending && (file || montoInicialPagado > 0)) {
     if (file) {
       const uploadResult = await uploadComprobanteStorage(file, invitadoId);
@@ -250,15 +229,31 @@ export const createInvitado = async (
       fecha: new Date().toISOString(),
     };
     pagosList = [initialPago];
-
-    await updateDoc(doc(db, 'invitados', invitadoId), {
-      comprobanteUrl,
-      comprobanteNombre,
-      estadoPago: file ? 'en_revision' : estadoPago,
-      fechaPago,
-      pagos: pagosList,
-    });
   }
+
+  // Guardar documento completo en Firestore de una sola vez (atómico)
+  const docData = {
+    nombre: data.nombre.trim(),
+    apellido: data.apellido.trim(),
+    telefono: cleanPhone,
+    asistencia: data.asistencia,
+    invitados: isAttending ? data.invitados : 0,
+    restriccionAlimentaria: data.restriccionAlimentaria || 'ninguno',
+    otros: data.otros?.trim() || '',
+    observacion: data.observacion?.trim() || '',
+    cancion: data.cancion?.trim() || '',
+    opcionPago,
+    montoTotal: isAttending ? data.montoTotal : 0,
+    montoPagado: montoInicialPagado,
+    estadoPago,
+    comprobanteUrl,
+    comprobanteNombre,
+    fechaRegistro: serverTimestamp(),
+    fechaPago,
+    pagos: pagosList,
+  };
+
+  await setDoc(docRef, docData);
 
   return {
     id: invitadoId,

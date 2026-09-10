@@ -18,6 +18,7 @@ export const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState<'todos' | 'pendiente' | 'parcialmente_pagado' | 'en_revision' | 'aprobado' | 'declined'>('todos');
   const [selectedProofUrl, setSelectedProofUrl] = useState<{ url: string; name: string } | null>(null);
   const [selectedInvitadoForDetails, setSelectedInvitadoForDetails] = useState<Invitado | null>(null);
+  const [invitadoToDelete, setInvitadoToDelete] = useState<{ id: string; name: string } | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -57,10 +58,7 @@ export const Dashboard = () => {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar la confirmación de ${name}? Esta acción no se puede deshacer.`)) {
-      return;
-    }
+  const confirmDelete = async (id: string) => {
     setActionLoading(id);
     try {
       await deleteInvitado(id);
@@ -68,6 +66,7 @@ export const Dashboard = () => {
       if (selectedInvitadoForDetails && selectedInvitadoForDetails.id === id) {
         setSelectedInvitadoForDetails(null);
       }
+      setInvitadoToDelete(null);
     } catch (err) {
       console.error('Error al eliminar invitado:', err);
       alert('Error al eliminar el registro.');
@@ -378,7 +377,7 @@ export const Dashboard = () => {
                               </button>
                             )}
                             <button
-                              onClick={() => handleDelete(item.id, `${item.nombre} ${item.apellido}`)}
+                              onClick={() => setInvitadoToDelete({ id: item.id, name: `${item.nombre} ${item.apellido}` })}
                               disabled={actionLoading === item.id}
                               className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg font-bold text-[10px] transition-colors"
                               title="Eliminar invitado"
@@ -523,7 +522,7 @@ export const Dashboard = () => {
                         )}
 
                         <button
-                          onClick={() => handleDelete(item.id, `${item.nombre} ${item.apellido}`)}
+                          onClick={() => setInvitadoToDelete({ id: item.id, name: `${item.nombre} ${item.apellido}` })}
                           disabled={actionLoading === item.id}
                           className="px-2.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl font-bold text-xs transition-colors"
                           title="Eliminar invitado"
@@ -728,29 +727,51 @@ export const Dashboard = () => {
                             <button
                               type="button"
                               onClick={() => setSelectedProofUrl({ url: pago.comprobanteUrl!, name: pago.comprobanteNombre || `Comprobante Entrega #${idx + 1}` })}
-                              className="flex-1 py-1.5 bg-white hover:bg-[#BBDB93] border border-[#0B272D]/20 rounded-xl font-bold text-[11px] text-[#0B272D] transition-colors text-center"
+                              className="flex-1 py-1.5 bg-white hover:bg-[#BBDB93] border border-[#0B272D]/20 rounded-xl font-bold text-[11px] text-[#0B272D] transition-colors text-center shadow-xs"
                             >
-                              🔍 Ver en Visor
+                              👁️ Ver en Visor
                             </button>
                             <a
                               href={pago.comprobanteUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-[#0B272D] rounded-xl font-bold text-[11px] transition-colors"
+                              className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-[#0B272D] rounded-xl font-bold text-[11px] transition-colors flex items-center justify-center"
                               title="Abrir en pestaña nueva"
                             >
                               ↗
                             </a>
                           </div>
                         ) : (
-                          <span className="text-[10px] text-gray-400 italic pt-2">Sin archivo adjunto</span>
+                          <span className="text-[10px] text-gray-400 italic">Sin archivo</span>
                         )}
                       </div>
                     ))}
                   </div>
+                ) : selectedInvitadoForDetails.comprobanteUrl ? (
+                  /* Fallback for single legacy receipt */
+                  <div className="p-3 bg-[#FAFDF9] border border-[#BBDB93]/50 rounded-2xl flex items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">📄</span>
+                      <div>
+                        <p className="font-bold text-[#0B272D]">
+                          {selectedInvitadoForDetails.comprobanteNombre || 'Comprobante de Transferencia'}
+                        </p>
+                        <p className="text-[10px] text-gray-500">Comprobante principal registrado</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProofUrl({ url: selectedInvitadoForDetails.comprobanteUrl!, name: selectedInvitadoForDetails.comprobanteNombre || 'Comprobante' })}
+                      className="px-3 py-1.5 bg-white hover:bg-[#BBDB93] border border-[#0B272D]/15 rounded-xl font-bold text-[11px] text-[#0B272D] transition-colors shadow-xs inline-flex items-center gap-1 shrink-0"
+                    >
+                      <span>👁️</span>
+                      <span>Ver Archivo</span>
+                    </button>
+                  </div>
                 ) : (
-                  <div className="bg-[#FAFDF9] rounded-2xl p-6 text-center border border-dashed border-[#0B272D]/20 text-gray-500 text-xs">
-                    El invitado aún no ha adjuntado ningún comprobante de pago.
+                  <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl text-center text-xs text-gray-500">
+                    No se han adjuntado comprobantes de transferencia para este invitado.
                   </div>
                 )}
               </div>
@@ -792,7 +813,7 @@ export const Dashboard = () => {
                 )}
 
                 <button
-                  onClick={() => handleDelete(selectedInvitadoForDetails.id, `${selectedInvitadoForDetails.nombre} ${selectedInvitadoForDetails.apellido}`)}
+                  onClick={() => setInvitadoToDelete({ id: selectedInvitadoForDetails.id, name: `${selectedInvitadoForDetails.nombre} ${selectedInvitadoForDetails.apellido}` })}
                   disabled={actionLoading === selectedInvitadoForDetails.id}
                   className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl font-bold text-xs transition-colors"
                 >
@@ -806,6 +827,65 @@ export const Dashboard = () => {
                   Cerrar
                 </button>
               </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE MODAL POPUP */}
+      {invitadoToDelete && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-red-100 text-center space-y-4 animate-scale-up">
+            
+            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner border border-red-100">
+              🗑️
+            </div>
+
+            <div>
+              <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest block mb-1">
+                CONFIRMAR ELIMINACIÓN
+              </span>
+              <h3 className="text-xl font-bold text-[#0B272D] font-serif-display">
+                ¿Eliminar a {invitadoToDelete.name}?
+              </h3>
+              <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+                Estás a punto de borrar este registro de la lista de invitados. Esta acción no se puede deshacer.
+              </p>
+              <div className="bg-red-50/80 p-3 rounded-2xl mt-3 text-[11px] text-red-700 font-medium border border-red-100 text-left space-y-1">
+                <p className="font-bold flex items-center gap-1.5 text-red-800">
+                  <span>⚠️</span>
+                  <span>Consecuencias:</span>
+                </p>
+                <ul className="list-disc list-inside space-y-0.5 text-red-600 pl-1">
+                  <li>Se liberarán los lugares reservados.</li>
+                  <li>Se eliminarán todos los pagos y comprobantes asociados.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setInvitadoToDelete(null)}
+                disabled={actionLoading === invitadoToDelete.id}
+                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => confirmDelete(invitadoToDelete.id)}
+                disabled={actionLoading === invitadoToDelete.id}
+                className="flex-1 py-3 px-4 bg-[#8C1C00] hover:bg-[#6D1500] text-white font-bold text-xs rounded-xl transition-colors shadow-md flex items-center justify-center gap-2"
+              >
+                {actionLoading === invitadoToDelete.id ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <span>Sí, Eliminar</span>
+                )}
+              </button>
             </div>
 
           </div>

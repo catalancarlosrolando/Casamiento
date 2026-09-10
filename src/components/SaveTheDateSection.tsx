@@ -96,7 +96,7 @@ export const SaveTheDateSection: React.FC = () => {
               </div>
 
               {/* Calendar Grid Frame */}
-              <div className="hidden md:block bg-[#FAFBF9] rounded-xl p-3.5 sm:p-5 border border-[#0B272D]/10 shadow-inner">
+              <div className="bg-[#FAFBF9] rounded-xl p-3.5 sm:p-5 border border-[#0B272D]/10 shadow-inner">
                 {/* Day Headers */}
                 <div className="grid grid-cols-7 text-center text-xs font-semibold text-[#5A9696] mb-2 font-sans">
                   <span>LUN</span>
