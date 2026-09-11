@@ -27,8 +27,8 @@ export const RsvpSection: React.FC = () => {
   const [otherDietary, setOtherDietary] = useState<string>('');
   const [amountPartial, setAmountPartial] = useState<number>(0);
 
-  // Payment Option State: 'ahora' (Pay now & attach) vs 'tarde' (Pay later & receive unique link)
-  const [paymentOption, setPaymentOption] = useState<'ahora' | 'tarde' | 'fraccionado'>('ahora');
+  // Payment Option State: 'ahora' (Pay now & attach) vs 'tarde' (Pay later) vs 'fraccionado' (Pay in installments)
+  const [paymentOption, setPaymentOption] = useState<'ahora' | 'tarde' | 'fraccionado' | ''>('');
 
   // File Upload State
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
@@ -164,9 +164,14 @@ export const RsvpSection: React.FC = () => {
       return;
     }
 
+    if (attendance === 'attending' && !paymentOption) {
+      setFormError('Por favor elija una opción de pago.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const fileToUpload = (attendance === 'attending' && paymentOption === 'ahora' || attendance === 'attending' && paymentOption === 'fraccionado')
+      const fileToUpload = (attendance === 'attending' && (paymentOption === 'ahora' || paymentOption === 'fraccionado'))
         ? attachedFile?.file
         : null;
 
@@ -181,14 +186,14 @@ export const RsvpSection: React.FC = () => {
           otros: otherDietary,
           observacion: comment,
           cancion: songRequest,
-          opcionPago: attendance === 'attending' ? paymentOption : 'no_aplica',
+          opcionPago: attendance === 'attending' ? (paymentOption as 'ahora' | 'tarde' | 'fraccionado') : 'no_aplica',
           montoTotal: totalAmount,
           montoPagado: attendance === 'attending'
             ? (paymentOption === 'fraccionado' ? amountPartial : (paymentOption === 'ahora' && fileToUpload ? totalAmount : 0))
             : 0,
           estadoPago: attendance !== 'attending'
             ? 'no_aplica'
-            : (fileToUpload ? 'en_revision' : 'pendiente'),
+            : (fileToUpload ? 'en_revision' : (paymentOption === 'fraccionado' && amountPartial > 0 ? 'parcialmente_pagado' : 'pendiente')),
         },
         fileToUpload
       );
@@ -216,11 +221,14 @@ export const RsvpSection: React.FC = () => {
     setPhone('');
     setAttendance('attending');
     setGuestCount(1);
-    setPaymentOption('ahora');
+    setPaymentOption('');
     setAttachedFile(null);
     setFormError(null);
     setCopiedLink(false);
+    setDietary('ninguno');
     setOtherDietary('');
+    setSongRequest('');
+    setComment('');
     setAmountPartial(0);
   };
 
@@ -424,7 +432,7 @@ export const RsvpSection: React.FC = () => {
                       Formulario de Confirmación
                     </h3>
                     <p className="text-[#1D373C] text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-                      Tu presencia es nuestro mayor regalo. Con tu tarjeta ya nos estás regalando este hermoso momento.
+                      Tu presencia es nuestro mayor regalo.
                     </p>
                   </div>
                   <span className="text-3xl">🌿</span>
@@ -569,307 +577,121 @@ export const RsvpSection: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* PAYMENT METHOD SELECTION (PAGAR AHORA VS PAGAR MAS TARDE VS PAGAR FRACCIONADO) */}
-                    <div className="bg-[#F5F9F8] rounded-2xl p-5 sm:p-6 border border-[#5A9696]/30 space-y-4">
+                    {/* Dietary Restrictions & Preferences */}
+                    <div>
+                      <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                        Restricciones Alimentarias
+                      </label>
+                      <select
+                        value={dietary}
+                        onChange={(e) => setDietary(e.target.value)}
+                        className="w-full h-12 px-4 rounded-xl bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] focus:outline-none focus:ring-2 focus:ring-[#5A9696] focus:border-[#5A9696] transition-all mb-2"
+                      >
+                        <option value="ninguno">Ninguna restricción (Menú tradicional)</option>
+                        <option value="vegetariano">Menú Vegetariano</option>
+                        <option value="celiaco">Menú Celíaco / Sin TACC</option>
+                        <option value="otros">Otros</option>
+                      </select>
+                    </div>
 
+                    {dietary === 'otros' && (
+                      <div className="animate-fade-in">
+                        <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                          Especifique sus restricciones alimentarias
+                        </label>
+                        <input
+                          type="text"
+                          value={otherDietary}
+                          placeholder="Ej: Intolerante a la lactosa, etc."
+                          onChange={(e) => setOtherDietary(e.target.value)}
+                          className="w-full h-12 px-4 rounded-xl bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
+                        />
+                      </div>
+                    )}
+
+                    {/* Comment / Observaciones */}
+                    <div>
+                      <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                        Observaciones
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={comment}
+                        placeholder="Agrega nombres de acompañantes o comentarios adicionales..."
+                        onChange={(e) => setComment(e.target.value)}
+                        className="w-full p-3.5 rounded-xl bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
+                      />
+                    </div>
+
+                    {/* Song Request */}
+                    <div>
+                      <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                        ¿Qué canción no puede faltar en la fiesta? 🎵
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Bohemian Rhapsody - Queen"
+                        value={songRequest}
+                        onChange={(e) => setSongRequest(e.target.value)}
+                        className="w-full h-12 px-4 rounded-xl bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
+                      />
+                    </div>
+
+                    {/* PAYMENT METHOD SELECTION (DESPLEGABLE SENCILLO) */}
+                    <div className="bg-[#F5F9F8] rounded-2xl p-5 sm:p-6 border border-[#5A9696]/30 space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="bg-[#D6E4BA] text-[#0B272D] text-[9px] font-bold tracking-wider uppercase px-3 py-1 rounded-full">
-                          🌿 MODALIDAD DE PAGO
+                          🌿 FORMA DE PAGO
                         </span>
                         <span className="text-xs font-bold text-[#0B272D]">
                           Total: ${totalAmount.toLocaleString('es-AR')} ARS
                         </span>
                       </div>
 
-                      {/* Switch Option */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => setPaymentOption('ahora')}
-                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${paymentOption === 'ahora'
-                            ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
-                            : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
-                            }`}
+                      {/* Dropdown Select */}
+                      <div>
+                        <label htmlFor="paymentOptionSelect" className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
+                          Elija la opción de pago <span className="text-[#5A9696]">*</span>
+                        </label>
+                        <select
+                          id="paymentOptionSelect"
+                          value={paymentOption}
+                          onChange={(e) => setPaymentOption(e.target.value as 'ahora' | 'tarde' | 'fraccionado' | '')}
+                          className="w-full h-12 px-4 rounded-xl bg-white border border-[#0B272D]/20 text-sm font-semibold text-[#0B272D] focus:outline-none focus:ring-2 focus:ring-[#5A9696] focus:border-[#5A9696] transition-all cursor-pointer shadow-sm"
                         >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-[#0B272D]">💳 Pagar ahora</span>
-                            {paymentOption === 'ahora' && <span className="text-xs text-[#0B272D] font-bold">✓</span>}
-                          </div>
-                          <span className="text-[10px] text-gray-500">
-                            Adjuntar el comprobante en este momento.
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setPaymentOption('tarde')}
-                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${paymentOption === 'tarde'
-                            ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
-                            : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
-                            }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-[#0B272D]">⏳ Pagaré más tarde</span>
-                            {paymentOption === 'tarde' && <span className="text-xs text-[#0B272D] font-bold">✓</span>}
-                          </div>
-                          <span className="text-[10px] text-gray-500">
-                            Confirmar ahora y recibir un enlace único para adjuntar el comprobante luego.
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setPaymentOption('fraccionado')}
-                          className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 ${paymentOption === 'fraccionado'
-                            ? 'bg-white border-[#0B272D] ring-2 ring-[#0B272D]/20 shadow-sm'
-                            : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'
-                            }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-[#0B272D]">💳 Pagar Fraccionado</span>
-                            {paymentOption === 'fraccionado' && <span className="text-xs text-[#0B272D] font-bold">✓</span>}
-                          </div>
-                          <span className="text-[10px] text-gray-500">
-                            Realizar el pago en cuotas.
-                          </span>
-                        </button>
+                          <option value="">
+                            -- Elija la opción de pago --
+                          </option>
+                          <option value="ahora">💳 Pagar Ahora</option>
+                          <option value="fraccionado">💰 Pagar en Cuotas</option>
+                          <option value="tarde">⏳ Pagar más Tarde</option>
+                        </select>
                       </div>
 
-                      {/* OPTION: PAY NOW -> SHOW BANK DETAILS & DROPZONE */}
-                      {paymentOption === 'ahora' && (
-                        <div className=" grid grid-cols-1  gap-4">
-
-                          {/* Bank Details Accordion Card */}
-                          <div className="bg-[#FAFDF9] rounded-2xl p-4 sm:p-5 border border-[#BBDB93]/60 space-y-3 text-xs">
-                            <div className="flex items-center justify-between pb-2 border-b border-[#0B272D]/10">
-                              <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                                <span>🏦</span>
-                                <span>Datos Bancarios para Transferencia</span>
-                              </h3>
-                              <span className="text-[10px] text-[#5A9696] font-semibold">2 Cuentas</span>
-                            </div>
-
-                            {/* Acordeon Desplegable */}
-                            <div className="space-y-2">
-
-                              {/* Acordeon 1: Banco Nación */}
-                              <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenBank(openBank === 'nacion' ? null : 'nacion')}
-                                  className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
-                                >
-                                  <div className="flex items-center gap-2.5">
-                                    <span className="w-7 h-7 rounded-lg bg-[#D6E4BA] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
-                                      🏛️
-                                    </span>
-                                    <div>
-                                      <p className="font-bold text-xs text-[#0B272D]">Banco Nación</p>
-                                      <p className="text-[10px] text-gray-500">Mariana Pickenhayn</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
-                                      {openBank === 'nacion' ? 'Ocultar' : 'Ver datos'}
-                                    </span>
-                                    <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'nacion' ? 'rotate-180' : ''}`}>
-                                      ▼
-                                    </span>
-                                  </div>
-                                </button>
-
-                                {openBank === 'nacion' && (
-                                  <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
-                                    <div className="flex justify-between items-center text-[11px] text-gray-600">
-                                      <span>Titular:</span>
-                                      <span className="font-bold text-[#0B272D]">Mariana Pickenhayn</span>
-                                    </div>
-                                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
-                                      <div>
-                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
-                                        <span className="font-mono font-bold text-[#0B272D] text-xs">mariana.pick</span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopy('mariana.pick', 'alias1')}
-                                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
-                                      >
-                                        {copiedField === 'alias1' ? '✓ ¡Copiado!' : 'Copiar Alias'}
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Acordeon 2: Banco Santander */}
-                              <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenBank(openBank === 'santander' ? null : 'santander')}
-                                  className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
-                                >
-                                  <div className="flex items-center gap-2.5">
-                                    <span className="w-7 h-7 rounded-lg bg-[#E0E8E5] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
-                                      🏛️
-                                    </span>
-                                    <div>
-                                      <p className="font-bold text-xs text-[#0B272D]">Banco Santander</p>
-                                      <p className="text-[10px] text-gray-500">Camila Peroni Pickenhayn</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
-                                      {openBank === 'santander' ? 'Ocultar' : 'Ver datos'}
-                                    </span>
-                                    <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'santander' ? 'rotate-180' : ''}`}>
-                                      ▼
-                                    </span>
-                                  </div>
-                                </button>
-
-                                {openBank === 'santander' && (
-                                  <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
-                                    <div className="flex justify-between items-center text-[11px] text-gray-600">
-                                      <span>Titular:</span>
-                                      <span className="font-bold text-[#0B272D]">Camila Peroni Pickenhayn</span>
-                                    </div>
-                                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
-                                      <div>
-                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
-                                        <span className="font-mono font-bold text-[#0B272D] text-xs">camilapickenhayn</span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopy('camilapickenhayn', 'alias2')}
-                                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
-                                      >
-                                        {copiedField === 'alias2' ? '✓ ¡Copiado!' : 'Copiar Alias'}
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-
-                            </div>
-                          </div>
-
-                          {/* File Upload Dropzone */}
-                          <div>
-                            <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                              Adjuntar Comprobante de Pago <span className="text-gray-400 font-normal">(Opcional / Recomendado)</span>
-                            </label>
-
-                            {/* Hidden File Input */}
-                            <input
-                              type="file"
-                              ref={fileInputRef}
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files.length > 0) {
-                                  handleFileSelect(e.target.files[0]);
-                                }
-                              }}
-                              accept=".jpg,.jpeg,.png,.webp,.pdf"
-                              className="hidden"
-                            />
-
-                            {/* Dropzone Box */}
-                            {!attachedFile ? (
-                              <div
-                                onClick={() => fileInputRef.current?.click()}
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={handleDrop}
-                                className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${isDragging
-                                  ? 'border-[#0B272D] bg-[#D6E4BA]/30 scale-[1.02]'
-                                  : 'border-[#5A9696] hover:border-[#0B272D] hover:bg-[#F9FBFA]'
-                                  }`}
-                              >
-                                <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>
-                                <p className="text-xs sm:text-sm font-bold text-[#0B272D] mb-1">
-                                  Arrastra tu archivo aquí o haz clic para explorar
-                                </p>
-                                <p className="text-[11px] text-[#5A9696]">
-                                  Formatos permitidos: JPG, PNG, WEBP, PDF · Máximo 5 MB
-                                </p>
-
-                                <button
-                                  type="button"
-                                  className="mt-3 inline-block text-[11px] font-semibold text-[#5A9696] bg-white border border-[#5A9696] px-4 py-1.5 rounded-full hover:bg-[#5A9696] hover:text-white transition-colors"
-                                >
-                                  Seleccionar archivo
-                                </button>
-                              </div>
-                            ) : (
-                              /* Live Preview Chip */
-                              <div className="bg-white rounded-xl p-3.5 border border-[#5A9696]/40 flex items-center justify-between shadow-sm animate-fade-in">
-                                <div className="flex items-center gap-3 overflow-hidden">
-                                  {attachedFile.previewUrl ? (
-                                    <img
-                                      src={attachedFile.previewUrl}
-                                      alt="Preview"
-                                      className="w-10 h-10 object-cover rounded-lg border border-[#0B272D]/10 shrink-0"
-                                    />
-                                  ) : (
-                                    <div className="w-10 h-10 rounded-lg bg-[#E0E8E5] flex items-center justify-center text-xl shrink-0">
-                                      📄
-                                    </div>
-                                  )}
-                                  <div className="truncate">
-                                    <p className="text-xs font-bold text-[#0B272D] truncate">
-                                      {attachedFile.name}
-                                    </p>
-                                    <p className="text-[10px] text-[#5A9696]">
-                                      {attachedFile.sizeFormatted} · <span className="text-[#426B6B] font-semibold">Listo para enviar</span>
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <span className="bg-[#BBDB93] text-[#0B272D] text-[9px] font-bold px-2.5 py-1 rounded-full">
-                                    ✓ Adjuntado
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={handleClearFile}
-                                    className="w-7 h-7 rounded-full bg-[#FAF0F0] text-[#8C1C00] hover:bg-[#8C1C00] hover:text-white flex items-center justify-center text-xs font-bold transition-colors"
-                                    title="Eliminar archivo"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-
-                            {fileError && (
-                              <p className="text-xs text-[#8C1C00] font-semibold mt-2">
-                                ⚠️ {fileError}
-                              </p>
-                            )}
-                          </div>
+                      {/* PARTIAL / CUOTAS AMOUNT INPUT */}
+                      {paymentOption === 'fraccionado' && (
+                        <div className="space-y-1.5 pt-1 animate-fade-in">
+                          <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase">
+                            Monto a transferir ahora ($) <span className="text-[#5A9696]">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="Ingrese el monto que abona en esta cuota"
+                            value={amountPartial === 0 ? '' : amountPartial}
+                            onChange={(e) => setAmountPartial(e.target.value ? Number(e.target.value) : 0)}
+                            className="w-full h-12 px-4 rounded-xl bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] focus:border-[#5A9696] transition-all"
+                          />
+                          <p className="text-[11px] text-gray-500">
+                            Podrás abonar las siguientes cuotas en cualquier momento con tu enlace de reserva.
+                          </p>
                         </div>
                       )}
 
-                      {/* OPTION: PAY IN PARTIAL -> SHOW BANK DETAILS & DROPZONE */}
-                      {paymentOption === 'fraccionado' && (
+                      {/* BANK DETAILS & DROPZONE FOR 'ahora' OR 'fraccionado' */}
+                      {(paymentOption === 'ahora' || paymentOption === 'fraccionado') && (
                         <div className="space-y-4 pt-2 animate-fade-in">
-
-                          {/* Amount Partial */}
-                          <div>
-                            <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                              Monto Parcial
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              placeholder="Monto"
-                              value={amountPartial === 0 ? '' : amountPartial}
-                              onChange={(e) => setAmountPartial(e.target.value ? Number(e.target.value) : 0)}
-                              className="w-full h-12 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] focus:border-[#5A9696] transition-all"
-                            />
-                          </div>
-
-
-                          {/* Bank Details Accordion Card */}
+                          {/* Bank Details Card */}
                           <div className="bg-[#FAFDF9] rounded-2xl p-4 sm:p-5 border border-[#BBDB93]/60 space-y-3 text-xs">
                             <div className="flex items-center justify-between pb-2 border-b border-[#0B272D]/10">
                               <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
@@ -881,7 +703,6 @@ export const RsvpSection: React.FC = () => {
 
                             {/* Acordeon Desplegable */}
                             <div className="space-y-2">
-
                               {/* Acordeon 1: Banco Nación */}
                               <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
                                 <button
@@ -979,7 +800,6 @@ export const RsvpSection: React.FC = () => {
                                   </div>
                                 )}
                               </div>
-
                             </div>
                           </div>
 
@@ -988,8 +808,6 @@ export const RsvpSection: React.FC = () => {
                             <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
                               Adjuntar Comprobante de Pago <span className="text-gray-400 font-normal">(Opcional / Recomendado)</span>
                             </label>
-
-
 
                             {/* Hidden File Input */}
                             <input
@@ -1018,7 +836,7 @@ export const RsvpSection: React.FC = () => {
                               >
                                 <span className="text-3xl block mb-2 text-[#5A9696]">☁</span>
                                 <p className="text-xs sm:text-sm font-bold text-[#0B272D] mb-1">
-                                  Arrastra tu archivo aquí o haz clic para explorar
+                                  Arrastra tu comprobante aquí o haz clic para seleccionarlo
                                 </p>
                                 <p className="text-[11px] text-[#5A9696]">
                                   Formatos permitidos: JPG, PNG, WEBP, PDF · Máximo 5 MB
@@ -1092,67 +910,6 @@ export const RsvpSection: React.FC = () => {
                           </p>
                         </div>
                       )}
-
-                    </div>
-
-                    {/* Dietary Restrictions & Preferences */}
-                    <div className="pt-2">
-                      <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                        Restricciones Alimentarias
-                      </label>
-                      <select
-                        value={dietary}
-                        onChange={(e) => setDietary(e.target.value)}
-                        className="w-full h-12 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] focus:outline-none focus:ring-2 focus:ring-[#5A9696] focus:border-[#5A9696] transition-all mb-2"
-                      >
-                        <option value="ninguno">Ninguna restricción (Menú tradicional)</option>
-                        <option value="vegetariano">Menú Vegetariano</option>
-                        <option value="celiaco">Menú Celíaco / Sin TACC</option>
-                        <option value="otros">Otros</option>
-                      </select>
-                    </div>
-
-                    {dietary === 'otros' && (
-                      <div>
-                        <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                          Especifique sus restricciones alimentarias
-                        </label>
-                        <input
-                          type="text"
-                          value={otherDietary}
-                          onChange={(e) => setOtherDietary(e.target.value)}
-                          className="w-full h-12 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
-                        />
-                      </div>
-                    )}
-
-
-                    {/* Comment */}
-                    <div>
-                      <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                        Observaciones
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={comment}
-                        placeholder="Agrega personas o comentarios adicionales..."
-                        onChange={(e) => setComment(e.target.value)}
-                        className="w-full p-3 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
-                      />
-                    </div>
-
-                    {/* Song Request */}
-                    <div>
-                      <label className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                        ¿Qué canción no puede faltar en la fiesta? 🎵
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ej: Bohemian Rhapsody - Queen"
-                        value={songRequest}
-                        onChange={(e) => setSongRequest(e.target.value)}
-                        className="w-full h-12 px-4 rounded-lg bg-white border border-[#0B272D]/20 text-sm text-[#0B272D] placeholder-[#426B6B]/70 focus:outline-none focus:ring-2 focus:ring-[#5A9696] transition-all"
-                      />
                     </div>
 
                   </div>
