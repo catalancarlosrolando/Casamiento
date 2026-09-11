@@ -44,8 +44,21 @@ export const RsvpSection: React.FC = () => {
   const [savedInvitado, setSavedInvitado] = useState<Invitado | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [openBank, setOpenBank] = useState<'nacion' | 'santander' | null>('nacion');
+  const [showBankDetails, setShowBankDetails] = useState<boolean>(false);
+  const formCardRef = useRef<HTMLDivElement>(null);
 
+  const scrollToFormTop = () => {
+    if (formCardRef.current) {
+      formCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Auto-scroll to top of form card when submitted or on error
+  useEffect(() => {
+    if (isSubmitted || formError) {
+      scrollToFormTop();
+    }
+  }, [isSubmitted, formError]);
 
   // Price per person
   const pricePerPerson = 75000;
@@ -145,27 +158,32 @@ export const RsvpSection: React.FC = () => {
     // Basic validation
     if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
       setFormError('Por favor ingresa tu Nombre, Apellido y Teléfono.');
+      scrollToFormTop();
       return;
     }
 
     // Validate Argentine Phone
     if (!isArgentinaPhoneValid(phone)) {
       setFormError('Por favor ingresa un número de teléfono válido de Argentina con código de área (ej: 264 123 4567 o 11 1234 5678).');
+      scrollToFormTop();
       return;
     }
 
     if (!attendance) {
       setFormError('Por favor selecciona si asistirás a la boda.');
+      scrollToFormTop();
       return;
     }
 
     if (attendance === 'attending' && (!guestCount || guestCount < 1)) {
       setFormError('La cantidad de personas que confirman debe ser al menos 1.');
+      scrollToFormTop();
       return;
     }
 
     if (attendance === 'attending' && !paymentOption) {
       setFormError('Por favor elija una opción de pago.');
+      scrollToFormTop();
       return;
     }
 
@@ -200,6 +218,7 @@ export const RsvpSection: React.FC = () => {
 
       setSavedInvitado(result);
       setIsSubmitted(true);
+      scrollToFormTop();
     } catch (err: any) {
       if (err instanceof TelefonoDuplicadoError) {
         setDuplicateGuest(err.invitadoExistente);
@@ -207,6 +226,7 @@ export const RsvpSection: React.FC = () => {
         console.error('Error al guardar confirmación:', err);
         setFormError(err?.message || 'Ocurrió un problema al enviar tu confirmación. Por favor intenta nuevamente.');
       }
+      scrollToFormTop();
     } finally {
       setIsSubmitting(false);
     }
@@ -230,6 +250,7 @@ export const RsvpSection: React.FC = () => {
     setSongRequest('');
     setComment('');
     setAmountPartial(0);
+    scrollToFormTop();
   };
 
   const handleCopyLink = () => {
@@ -283,7 +304,10 @@ export const RsvpSection: React.FC = () => {
         </div>
 
         {/* Centerpiece Elevated Stationery Card (max-width: 640px) */}
-        <div className="max-w-[640px] mx-auto bg-white rounded-3xl shadow-2xl border border-[#0B272D]/15 overflow-hidden transition-all duration-300">
+        <div
+          ref={formCardRef}
+          className="max-w-[640px] mx-auto bg-white rounded-3xl shadow-2xl border border-[#0B272D]/15 overflow-hidden transition-all duration-300 scroll-mt-24"
+        >
 
           {/* Card Top Decorative Accent Bar */}
           <div className="h-2 bg-gradient-to-r from-[#5A9696] via-[#BBDB93] to-[#5A9696]" />
@@ -651,7 +675,7 @@ export const RsvpSection: React.FC = () => {
                       {/* Dropdown Select */}
                       <div>
                         <label htmlFor="paymentOptionSelect" className="block text-xs font-bold text-[#0B272D] tracking-wide uppercase mb-1.5">
-                          Elija la opción de pago <span className="text-[#5A9696]">*</span>
+                          Elija la opción de pago o pague despues <span className="text-[#5A9696]">*</span>
                         </label>
                         <select
                           id="paymentOptionSelect"
@@ -691,116 +715,88 @@ export const RsvpSection: React.FC = () => {
                       {/* BANK DETAILS & DROPZONE FOR 'ahora' OR 'fraccionado' */}
                       {(paymentOption === 'ahora' || paymentOption === 'fraccionado') && (
                         <div className="space-y-4 pt-2 animate-fade-in">
-                          {/* Bank Details Card */}
-                          <div className="bg-[#FAFDF9] rounded-2xl p-4 sm:p-5 border border-[#BBDB93]/60 space-y-3 text-xs">
-                            <div className="flex items-center justify-between pb-2 border-b border-[#0B272D]/10">
-                              <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                          {/* Bank Details Collapsible Card */}
+                          <div className="bg-[#FAFDF9] rounded-2xl p-4 sm:p-5 border border-[#BBDB93]/60 text-xs">
+                            <button
+                              type="button"
+                              onClick={() => setShowBankDetails((prev) => !prev)}
+                              className="w-full flex items-center justify-between text-left cursor-pointer transition-colors"
+                            >
+                              <h3 className="font-bold text-[#0B272D] uppercase tracking-wider text-[11px] sm:text-xs flex items-center gap-1.5">
                                 <span>🏦</span>
                                 <span>Datos Bancarios para Transferencia</span>
                               </h3>
-                              <span className="text-[10px] text-[#5A9696] font-semibold">2 Cuentas</span>
-                            </div>
-
-                            {/* Acordeon Desplegable */}
-                            <div className="space-y-2">
-                              {/* Acordeon 1: Banco Nación */}
-                              <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenBank(openBank === 'nacion' ? null : 'nacion')}
-                                  className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
-                                >
-                                  <div className="flex items-center gap-2.5">
-                                    <span className="w-7 h-7 rounded-lg bg-[#D6E4BA] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
-                                      🏛️
-                                    </span>
-                                    <div>
-                                      <p className="font-bold text-xs text-[#0B272D]">Banco Nación</p>
-                                      <p className="text-[10px] text-gray-500">Mariana Pickenhayn</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
-                                      {openBank === 'nacion' ? 'Ocultar' : 'Ver datos'}
-                                    </span>
-                                    <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'nacion' ? 'rotate-180' : ''}`}>
-                                      ▼
-                                    </span>
-                                  </div>
-                                </button>
-
-                                {openBank === 'nacion' && (
-                                  <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
-                                    <div className="flex justify-between items-center text-[11px] text-gray-600">
-                                      <span>Titular:</span>
-                                      <span className="font-bold text-[#0B272D]">Mariana Pickenhayn</span>
-                                    </div>
-                                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
-                                      <div>
-                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
-                                        <span className="font-mono font-bold text-[#0B272D] text-xs">mariana.pick</span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopy('mariana.pick', 'alias1')}
-                                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
-                                      >
-                                        {copiedField === 'alias1' ? '✓ ¡Copiado!' : 'Copiar Alias'}
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-[#5A9696] font-semibold">
+                                  {showBankDetails ? 'Ocultar' : 'Ver cuentas'}
+                                </span>
+                                <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${showBankDetails ? 'rotate-180' : ''}`}>
+                                  ▼
+                                </span>
                               </div>
+                            </button>
 
-                              {/* Acordeon 2: Banco Santander */}
-                              <div className="border border-[#0B272D]/10 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenBank(openBank === 'santander' ? null : 'santander')}
-                                  className="w-full p-3 flex items-center justify-between text-left hover:bg-[#F0F4F2]/50 transition-colors"
-                                >
-                                  <div className="flex items-center gap-2.5">
-                                    <span className="w-7 h-7 rounded-lg bg-[#E0E8E5] text-[#0B272D] flex items-center justify-center text-xs font-bold shrink-0">
-                                      🏛️
-                                    </span>
-                                    <div>
-                                      <p className="font-bold text-xs text-[#0B272D]">Banco Santander</p>
-                                      <p className="text-[10px] text-gray-500">Camila Peroni Pickenhayn</p>
+                            {showBankDetails && (
+                              <div className="space-y-2.5 pt-3 mt-2 border-t border-[#0B272D]/10 animate-fade-in">
+                                {/* Cuenta 1: Banco Nación */}
+                                <div className="bg-white p-3 rounded-xl border border-[#0B272D]/10 shadow-xs space-y-2">
+                                  {/* Linea 1: Banco y Titular en la misma línea */}
+                                  <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-[#0B272D]">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm">🏛️</span>
+                                      <span className="font-bold">Banco Nación</span>
                                     </div>
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-[#5A9696] font-medium hidden sm:inline">
-                                      {openBank === 'santander' ? 'Ocultar' : 'Ver datos'}
-                                    </span>
-                                    <span className={`text-xs text-[#5A9696] font-bold transition-transform duration-200 inline-block ${openBank === 'santander' ? 'rotate-180' : ''}`}>
-                                      ▼
+                                    <span className="text-gray-600 text-[11px]">
+                                      Titular: <strong className="text-[#0B272D]">Mariana Pickenhayn</strong>
                                     </span>
                                   </div>
-                                </button>
 
-                                {openBank === 'santander' && (
-                                  <div className="p-3 pt-2 border-t border-[#0B272D]/5 bg-[#F9FBFA] space-y-2 animate-fade-in">
-                                    <div className="flex justify-between items-center text-[11px] text-gray-600">
-                                      <span>Titular:</span>
-                                      <span className="font-bold text-[#0B272D]">Camila Peroni Pickenhayn</span>
+                                  {/* Linea 2: Alias con botón copiar */}
+                                  <div className="flex items-center justify-between bg-[#F9FBFA] p-2 rounded-lg border border-[#0B272D]/5">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[10px] text-gray-500 uppercase font-bold">Alias:</span>
+                                      <span className="font-mono font-bold text-[#0B272D] text-xs sm:text-sm">mariana.pick</span>
                                     </div>
-                                    <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#0B272D]/10">
-                                      <div>
-                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Alias</span>
-                                        <span className="font-mono font-bold text-[#0B272D] text-xs">camilapickenhayn</span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopy('camilapickenhayn', 'alias2')}
-                                        className="text-[10px] font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors"
-                                      >
-                                        {copiedField === 'alias2' ? '✓ ¡Copiado!' : 'Copiar Alias'}
-                                      </button>
-                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopy('mariana.pick', 'alias1')}
+                                      className="text-[10px] sm:text-xs font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors cursor-pointer"
+                                    >
+                                      {copiedField === 'alias1' ? '✓ ¡Copiado!' : 'Copiar Alias'}
+                                    </button>
                                   </div>
-                                )}
+                                </div>
+
+                                {/* Cuenta 2: Banco Santander */}
+                                <div className="bg-white p-3 rounded-xl border border-[#0B272D]/10 shadow-xs space-y-2">
+                                  {/* Linea 1: Banco y Titular en la misma línea */}
+                                  <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-[#0B272D]">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm">🏛️</span>
+                                      <span className="font-bold">Banco Santander</span>
+                                    </div>
+                                    <span className="text-gray-600 text-[11px]">
+                                      Titular: <strong className="text-[#0B272D]">Camila Peroni Pickenhayn</strong>
+                                    </span>
+                                  </div>
+
+                                  {/* Linea 2: Alias con botón copiar */}
+                                  <div className="flex items-center justify-between bg-[#F9FBFA] p-2 rounded-lg border border-[#0B272D]/5">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[10px] text-gray-500 uppercase font-bold">Alias:</span>
+                                      <span className="font-mono font-bold text-[#0B272D] text-xs sm:text-sm">camilapickenhayn</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopy('camilapickenhayn', 'alias2')}
+                                      className="text-[10px] sm:text-xs font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors cursor-pointer"
+                                    >
+                                      {copiedField === 'alias2' ? '✓ ¡Copiado!' : 'Copiar Alias'}
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </div>
 
                           {/* File Upload Dropzone */}
