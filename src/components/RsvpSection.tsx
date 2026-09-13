@@ -759,7 +759,7 @@ export const RsvpSection: React.FC = () => {
                                     </div>
                                     <button
                                       type="button"
-                                      onClick={() => handleCopy('mariana.pick', 'alias1')}
+                                      onClick={() => handleCopy('marianapick.naranja', 'alias1')}
                                       className="text-[10px] sm:text-xs font-bold text-[#5A9696] hover:text-[#0B272D] px-2.5 py-1 bg-[#E0E8E5] hover:bg-[#D6E4BA] rounded-lg transition-colors cursor-pointer"
                                     >
                                       {copiedField === 'alias1' ? '✓ ¡Copiado!' : 'Copiar Alias'}
