@@ -82,6 +82,25 @@ export const Dashboard = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const getWhatsAppReminderUrl = (telefono: string, id: string) => {
+    const linkPago = `${window.location.origin}/pago?id=${id}`;
+    const cleanPhone = telefono.replace(/\D/g, '');
+    const mensaje = `¡Hola! ✨
+
+¡Falta cada vez menos para el gran día y nos hace una ilusión enorme poder compartirlo con vos! 🥂💛
+
+Te dejamos este mensajito para recordarte entrar a la invitación y subir el comprobante de pago de la tarjeta:
+👉 ${linkPago}
+
+📅 *Fecha límite para confirmar:* 9 de octubre.
+
+Y si por alguna razón realmente se te complica asistir, avisanos con tranquilidad así lo tenemos en cuenta.
+
+¡Queremos que seas parte de nuestra alegría y vivir este momento juntos! Un abrazo grande.`;
+
+    return `https://api.whatsapp.com/send?phone=549${cleanPhone}&text=${encodeURIComponent(mensaje)}`;
+  };
+
   // Metrics calculation
   const totalConfirmados = invitados.filter((i) => i.asistencia === 'attending');
   const totalPersonas = totalConfirmados.reduce((acc, curr) => acc + (curr.invitados || 1), 0);
@@ -273,10 +292,11 @@ export const Dashboard = () => {
                           {/* Phone */}
                           <td className="py-4 px-4 font-mono text-[#0B272D]">
                             <a
-                              href={`https://api.whatsapp.com/send?phone=549${item.telefono}`}
+                              href={getWhatsAppReminderUrl(item.telefono, item.id)}
                               target="_blank"
                               rel="noreferrer"
                               className="hover:underline text-[#5A9696] font-semibold flex items-center gap-1"
+                              title="Enviar recordatorio por WhatsApp"
                             >
                               <span>💬</span>
                               <span>{item.telefono}</span>
@@ -445,10 +465,11 @@ export const Dashboard = () => {
                         <div>
                           <span className="text-[10px] text-gray-400 block font-semibold uppercase">Teléfono</span>
                           <a
-                            href={`https://api.whatsapp.com/send?phone=549${item.telefono}`}
+                            href={getWhatsAppReminderUrl(item.telefono, item.id)}
                             target="_blank"
                             rel="noreferrer"
                             className="font-mono text-[#5A9696] font-bold hover:underline inline-flex items-center gap-1 mt-0.5"
+                            title="Enviar recordatorio por WhatsApp"
                           >
                             <span>💬</span>
                             <span>{item.telefono}</span>
@@ -552,15 +573,14 @@ export const Dashboard = () => {
                   <span className="bg-[#D6E4BA] text-[#0B272D] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full">
                     FICHA DE INVITADO & PAGO
                   </span>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                    selectedInvitadoForDetails.estadoPago === 'aprobado'
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${selectedInvitadoForDetails.estadoPago === 'aprobado'
                       ? 'bg-[#BBDB93] text-[#0B272D]'
                       : selectedInvitadoForDetails.estadoPago === 'parcialmente_pagado'
-                      ? 'bg-[#E6F0FA] text-[#1E56A0]'
-                      : selectedInvitadoForDetails.estadoPago === 'en_revision'
-                      ? 'bg-[#E0E8E5] text-[#0B272D]'
-                      : 'bg-[#FAF0E6] text-[#8C5A00]'
-                  }`}>
+                        ? 'bg-[#E6F0FA] text-[#1E56A0]'
+                        : selectedInvitadoForDetails.estadoPago === 'en_revision'
+                          ? 'bg-[#E0E8E5] text-[#0B272D]'
+                          : 'bg-[#FAF0E6] text-[#8C5A00]'
+                    }`}>
                     {selectedInvitadoForDetails.estadoPago}
                   </span>
                 </div>
@@ -570,7 +590,7 @@ export const Dashboard = () => {
                 <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
                   <span>📞 {selectedInvitadoForDetails.telefono}</span>
                   <a
-                    href={`https://api.whatsapp.com/send?phone=549${selectedInvitadoForDetails.telefono}`}
+                    href={getWhatsAppReminderUrl(selectedInvitadoForDetails.telefono, selectedInvitadoForDetails.id)}
                     target="_blank"
                     rel="noreferrer"
                     className="text-[#25D366] font-bold hover:underline inline-flex items-center gap-1"
@@ -609,11 +629,10 @@ export const Dashboard = () => {
 
                 <div className="bg-white rounded-xl p-3 border border-[#0B272D]/10">
                   <span className="text-[10px] text-gray-500 uppercase font-bold block mb-0.5">Saldo Restante</span>
-                  <span className={`text-lg font-bold ${
-                    Math.max(0, (selectedInvitadoForDetails.montoTotal || 0) - (selectedInvitadoForDetails.montoPagado || 0)) === 0
+                  <span className={`text-lg font-bold ${Math.max(0, (selectedInvitadoForDetails.montoTotal || 0) - (selectedInvitadoForDetails.montoPagado || 0)) === 0
                       ? 'text-[#3E7B27]'
                       : 'text-[#B85042]'
-                  }`}>
+                    }`}>
                     ${Math.max(0, (selectedInvitadoForDetails.montoTotal || 0) - (selectedInvitadoForDetails.montoPagado || 0)).toLocaleString('es-AR')}
                   </span>
                 </div>
@@ -837,7 +856,7 @@ export const Dashboard = () => {
       {invitadoToDelete && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-red-100 text-center space-y-4 animate-scale-up">
-            
+
             <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner border border-red-100">
               🗑️
             </div>

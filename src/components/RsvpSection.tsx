@@ -744,7 +744,7 @@ export const RsvpSection: React.FC = () => {
                                   <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-[#0B272D]">
                                     <div className="flex items-center gap-2">
                                       <span className="text-sm">🏛️</span>
-                                      <span className="font-bold">Banco Nación</span>
+                                      <span className="font-bold">Naranja X</span>
                                     </div>
                                     <span className="text-gray-600 text-[11px]">
                                       Titular: <strong className="text-[#0B272D]">Mariana Pickenhayn</strong>
@@ -755,7 +755,7 @@ export const RsvpSection: React.FC = () => {
                                   <div className="flex items-center justify-between bg-[#F9FBFA] p-2 rounded-lg border border-[#0B272D]/5">
                                     <div className="flex items-center gap-1.5">
                                       <span className="text-[10px] text-gray-500 uppercase font-bold">Alias:</span>
-                                      <span className="font-mono font-bold text-[#0B272D] text-xs sm:text-sm">mariana.pick</span>
+                                      <span className="font-mono font-bold text-[#0B272D] text-xs sm:text-sm">marianapick.naranja</span>
                                     </div>
                                     <button
                                       type="button"
